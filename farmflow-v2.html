@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FarmFlow – Farm Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f7f9f7;color:#0f1f0f;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#c4d9c4;border-radius:10px}
+.sidebar{display:none;width:220px;min-height:100vh;position:fixed;left:0;top:0;z-index:40;background:#fff;border-right:1px solid #e8ede8;flex-direction:column}
+.main-wrap{min-height:100vh}
+.bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:40;background:#fff;border-top:1px solid #e8ede8;padding:2px 0 calc(2px + env(safe-area-inset-bottom))}
+@media(min-width:1024px){
+  .sidebar{display:flex}
+  .main-wrap{margin-left:220px}
+  .bottom-nav{display:none!important}
+  .lg-grid-4{display:grid!important;grid-template-columns:repeat(4,1fr);gap:14px}
+  .lg-grid-3{display:grid!important;grid-template-columns:repeat(3,1fr);gap:14px}
+  .lg-grid-2{display:grid!important;grid-template-columns:1fr 1fr;gap:16px}
+  .lg-show{display:block!important}
+  .lg-show-flex{display:flex!important}
+  .lg-hide{display:none!important}
+  .lg-table-cell{display:table-cell!important}
+}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#557055;background:none;border:none;width:100%;text-align:left;transition:all 0.12s;font-family:'Inter',system-ui,sans-serif}
+.nav-item:hover{background:#f0f7f0;color:#166534}
+.nav-item.active{background:#e8f5e8;color:#166534;font-weight:600}
+.nav-icon{font-size:15px;opacity:0.8;flex-shrink:0;width:20px;text-align:center}
+.card{background:#fff;border:1px solid #e8ede8;border-radius:12px;padding:16px}
+.card-hover{transition:box-shadow 0.15s,border-color 0.15s}
+.card-hover:hover{box-shadow:0 3px 12px rgba(0,0,0,0.07);border-color:#d0e0d0}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(247,249,247,0.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid #e8ede8;padding:11px 20px;display:flex;align-items:center;justify-content:space-between}
+input,select,textarea{font-family:'Inter',system-ui,sans-serif;font-size:13.5px;border:1px solid #dce8dc;border-radius:8px;padding:8px 12px;background:#fff;color:#0f1f0f;transition:border-color 0.15s,box-shadow 0.15s;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#166534;box-shadow:0 0 0 3px rgba(22,101,52,0.07)}
+.btn{font-family:'Inter',system-ui,sans-serif;font-weight:600;border-radius:8px;cursor:pointer;transition:all 0.12s;border:1px solid transparent;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-size:13px;padding:7px 15px;letter-spacing:-0.01em}
+.btn-primary{background:#166534;color:#fff;border-color:#166534}.btn-primary:hover{background:#14532d}
+.btn-outline{background:#fff;border-color:#dce8dc;color:#166534}.btn-outline:hover{background:#f0f7f0;border-color:#b0ccb0}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-ghost{background:transparent;border-color:transparent;color:#557055}.btn-ghost:hover{background:#f0f7f0}
+.btn-danger{background:#dc2626;color:#fff;border-color:#dc2626}.btn-danger:hover{background:#b91c1c}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;border:1px solid transparent}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 2px 5px;cursor:pointer;border:none;background:none;color:#8ca88c;font-size:10px;font-weight:500;font-family:'Inter',system-ui,sans-serif;transition:color 0.12s}
+.bnav-item.active{color:#166534}
+.bnav-icon{font-size:18px;line-height:1;margin-bottom:2px;display:block}
+.inb-critical{background:#fff5f5;border:1.5px solid #fca5a5;color:#991b1b;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;margin-top:10px}
+.inb-warning{background:#fffbeb;border:1.5px solid #fcd34d;color:#92400e;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;margin-top:10px}
+.inb-safe{background:#f0fdf4;border:1.5px solid #86efac;color:#166534;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;margin-top:10px}
+.data-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f0f5f0}
+.data-row:last-child{border-bottom:none}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#7a9a7a;margin-bottom:10px}
+.divider{height:1px;background:#f0f5f0;margin:12px 0}
+.modal-overlay{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.35);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,0.16);width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.stat-card{background:#fff;border:1px solid #e8ede8;border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stat-num{font-size:24px;font-weight:800;letter-spacing:-0.03em;color:#0f1f0f;line-height:1}
+.stat-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#7a9a7a;margin-top:2px}
+.stat-sub{font-size:11px;color:#9ab49a;margin-top:1px}
+.chart-wrap{position:relative;width:100%}
+.chart-wrap svg{width:100%;display:block}
+.chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.chart-title{font-size:13px;font-weight:600;color:#1a2e1a}
+.time-pills{display:flex;gap:4px}
+.time-pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #dce8dc;background:#fff;color:#7a9a7a;font-family:'Inter',system-ui,sans-serif}
+.time-pill.on{background:#e8f5e8;border-color:#b0d8b0;color:#166534}
+.animal-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;cursor:pointer;transition:background 0.1s;border:1px solid transparent}
+.animal-row:hover{background:#f5faf5;border-color:#e0eee0}
+.avatar{border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo}=React;
+
+// ── DATA ──────────────────────────────────────────────
+const FARMING_TYPES=[
+  {id:"dairy",label:"Dairy Farming",icon:"🐄",desc:"Milk production & herd management"},
+  {id:"pigs",label:"Pig Farming",icon:"🐷",desc:"Swine production & breeding"},
+  {id:"chickens",label:"Poultry / Chickens",icon:"🐔",desc:"Layers, broilers & breeding birds"},
+  {id:"crops",label:"Crop Farming",icon:"🌾",desc:"Maize, vegetables & oilseeds"},
+];
+const SEED_COWS=[
+  {id:"C001",name:"Bessie",sex:"F",breed:"Holstein",dob:"2018-04-12",status:"Active",role:"Cow",sireId:"EXT_Titan",damId:null,milk:28,lastCalv:"2024-01-10",daysInMilk:60,health:"Good"},
+  {id:"C002",name:"Daisy",sex:"F",breed:"Jersey",dob:"2019-07-22",status:"Active",role:"Cow",sireId:"EXT_Max",damId:null,milk:22,lastCalv:"2024-02-14",daysInMilk:26,health:"Good"},
+  {id:"C003",name:"Braveheart",sex:"M",breed:"Holstein",dob:"2016-11-05",status:"Active",role:"Bull",sireId:null,damId:null,weight:900},
+  {id:"C004",name:"Luna",sex:"F",breed:"Friesian",dob:"2020-03-18",status:"Dry",role:"Cow",sireId:"C003",damId:"C001",milk:0,lastCalv:"2023-09-20",daysInMilk:174,health:"Good"},
+  {id:"C005",name:"Rosie",sex:"F",breed:"Holstein",dob:"2021-06-14",status:"Heifer",role:"Heifer",sireId:"C003",damId:"C001",milk:0,health:"Good"},
+  {id:"C006",name:"Clover",sex:"F",breed:"Brown Swiss",dob:"2022-01-09",status:"Active",role:"Cow",sireId:"C003",damId:"C002",milk:19,lastCalv:"2024-03-01",daysInMilk:11,health:"Good"},
+  {id:"C007",name:"Dolly",sex:"F",breed:"Holstein",dob:"2023-08-23",status:"Heifer",role:"Heifer",sireId:"C003",damId:"C004",milk:0,health:"Good"},
+];
+const SEED_PIGS=[
+  {id:"P001",name:"Duchess",sex:"F",breed:"Large White",dob:"2020-05-10",status:"Active",role:"Sow",sireId:"EXT_Duke",damId:null,weight:220,litters:3,health:"Good"},
+  {id:"P002",name:"Bella",sex:"F",breed:"Landrace",dob:"2019-11-20",status:"Active",role:"Sow",sireId:"EXT_Bruno",damId:null,weight:210,litters:4,health:"Good"},
+  {id:"P003",name:"Goliath",sex:"M",breed:"Duroc",dob:"2019-03-15",status:"Active",role:"Boar",sireId:null,damId:null,weight:310,health:"Good"},
+  {id:"P004",name:"Lady",sex:"F",breed:"Pietrain",dob:"2021-02-08",status:"Active",role:"Sow",sireId:"EXT_Bruno",damId:null,weight:195,litters:2,health:"Good"},
+  {id:"P005",name:"Titan",sex:"M",breed:"Duroc/LW",dob:"2022-06-14",status:"Active",role:"Boar",sireId:"P003",damId:"P001",weight:280,health:"Good"},
+  {id:"P006",name:"Rosie",sex:"F",breed:"Duroc/LW",dob:"2022-06-14",status:"Active",role:"Sow",sireId:"P003",damId:"P001",weight:185,litters:1,health:"Good"},
+  {id:"P007",name:"Honey",sex:"F",breed:"Duroc/Land",dob:"2023-01-20",status:"Active",role:"Gilt",sireId:"P003",damId:"P002",weight:162,health:"Good"},
+  {id:"P008",name:"Storm",sex:"M",breed:"Duroc/Piet",dob:"2023-03-12",status:"Active",role:"Boar",sireId:"P003",damId:"P004",weight:265,health:"Good"},
+  {id:"P009",name:"Acorn",sex:"M",breed:"Duroc/LW",dob:"2024-10-05",status:"Active",role:"Piglet",sireId:"P003",damId:"P006",weight:18,health:"Good"},
+  {id:"P010",name:"Pippa",sex:"F",breed:"Duroc/LW",dob:"2024-10-05",status:"Active",role:"Piglet",sireId:"P003",damId:"P006",weight:16,health:"Good"},
+];
+const SEED_FLOCKS=[
+  {id:"F001",name:"Layer Flock A",type:"Layer",breed:"Hy-Line Brown",count:500,henHouseNo:"H1",dob:"2023-09-01",status:"Active",eggDay:420,mortality:2},
+  {id:"F002",name:"Broiler Batch 7",type:"Broiler",breed:"Ross 308",count:800,henHouseNo:"H2",dob:"2025-01-15",status:"Active",avgWeight:2.1,fcr:1.8},
+  {id:"F003",name:"Layer Flock B",type:"Layer",breed:"Lohmann Brown",count:350,henHouseNo:"H3",dob:"2024-03-10",status:"Active",eggDay:298,mortality:1},
+];
+const SEED_BIRDS=[
+  {id:"B001",name:"Rex",sex:"M",breed:"Boschveld",dob:"2022-03-10",status:"Active",role:"Cock",sireId:"EXT_King",damId:null,weight:3.2},
+  {id:"B002",name:"Pearl",sex:"F",breed:"Boschveld",dob:"2022-05-20",status:"Active",role:"Hen",sireId:"EXT_Ace",damId:null,weight:2.8},
+  {id:"B003",name:"Amber",sex:"F",breed:"Boschveld",dob:"2022-05-20",status:"Active",role:"Hen",sireId:"EXT_Ace",damId:null,weight:2.7},
+  {id:"B004",name:"Duke",sex:"M",breed:"Potchefstroom Koekoek",dob:"2021-11-04",status:"Active",role:"Cock",sireId:null,damId:null,weight:3.5},
+  {id:"B005",name:"Opal",sex:"F",breed:"Boschveld",dob:"2023-09-12",status:"Active",role:"Pullet",sireId:"B001",damId:"B002",weight:2.1},
+  {id:"B006",name:"Ruby",sex:"F",breed:"Boschveld",dob:"2023-09-12",status:"Active",role:"Pullet",sireId:"B001",damId:"B002",weight:2.0},
+];
+const SEED_FIELDS=[
+  {id:"FLD001",name:"North Block",size:12,sizeUnit:"ha",soil:"Clay Loam",crop:"Maize",variety:"DKC 78-45",plantDate:"2025-11-05",harvestEst:"2026-04-10",status:"Growing",irrigated:true},
+  {id:"FLD002",name:"South Block",size:8,sizeUnit:"ha",soil:"Sandy Loam",crop:"Soybeans",variety:"PAN 1583",plantDate:"2025-11-20",harvestEst:"2026-04-25",status:"Growing",irrigated:false},
+  {id:"FLD003",name:"River Field",size:3,sizeUnit:"ha",soil:"Alluvial",crop:"Vegetables",variety:"Mixed",plantDate:"2026-01-10",harvestEst:"2026-03-20",status:"Harvesting",irrigated:true},
+  {id:"FLD004",name:"West Block",size:15,sizeUnit:"ha",soil:"Clay",crop:"Sunflower",variety:"P64LP58",plantDate:"2025-12-01",harvestEst:"2026-05-15",status:"Growing",irrigated:false},
+  {id:"FLD005",name:"East Pasture",size:6,sizeUnit:"ha",soil:"Loam",crop:"--",variety:"--",plantDate:"--",harvestEst:"--",status:"Fallow",irrigated:false},
+];
+const HARVEST_RECORDS=[
+  {id:"H001",fieldId:"FLD003",date:"2025-11-15",crop:"Tomatoes",qty:4200,unit:"kg",price:8.5,revenue:35700},
+  {id:"H002",fieldId:"FLD003",date:"2025-10-10",crop:"Spinach",qty:800,unit:"kg",price:12,revenue:9600},
+  {id:"H003",fieldId:"FLD001",date:"2025-04-20",crop:"Maize",qty:9600,unit:"kg",price:3.2,revenue:30720},
+];
+const MILK_WEEK=[
+  {day:"Mon",am:142,pm:118},{day:"Tue",am:138,pm:115},{day:"Wed",am:145,pm:122},
+  {day:"Thu",am:140,pm:119},{day:"Fri",am:143,pm:121},{day:"Sat",am:136,pm:112},{day:"Sun",am:130,pm:108}
+];
+const MILK_MONTHLY=[
+  {m:"Sep",v:7800},{m:"Oct",v:8200},{m:"Nov",v:8100},{m:"Dec",v:7600},{m:"Jan",v:8400},{m:"Feb",v:8350},{m:"Mar",v:8500}
+];
+const EGG_WEEK=[{day:"Mon",v:702},{day:"Tue",v:718},{day:"Wed",v:695},{day:"Thu",v:722},{day:"Fri",v:718},{day:"Sat",v:705},{day:"Sun",v:710}];
+const WEATHER=[
+  {day:"Today",high:24,low:14,cond:"Sunny",icon:"☀️"},{day:"Tue",high:22,low:13,cond:"Partly cloudy",icon:"⛅"},
+  {day:"Wed",high:19,low:11,cond:"Rain",icon:"🌧️"},{day:"Thu",high:17,low:10,cond:"Cloudy",icon:"☁️"},
+  {day:"Fri",high:21,low:12,cond:"Sunny",icon:"☀️"}
+];
+const FINANCE_MONTHS=[
+  {m:"Oct",rev:62000,exp:38000},{m:"Nov",rev:65000,exp:40000},{m:"Dec",rev:70000,exp:45000},
+  {m:"Jan",rev:67000,exp:41000},{m:"Feb",rev:66000,exp:39000},{m:"Mar",rev:68400,exp:42200}
+];
+const SC={
+  Active:"bg-emerald-50 text-emerald-700",Dry:"bg-sky-50 text-sky-700",Sick:"bg-red-50 text-red-700",
+  Heifer:"bg-violet-50 text-violet-700",Growing:"bg-teal-50 text-teal-700",Harvesting:"bg-amber-50 text-amber-700",
+  Fallow:"bg-gray-100 text-gray-500",Boar:"bg-orange-50 text-orange-700",Sow:"bg-pink-50 text-pink-700",
+  Gilt:"bg-rose-50 text-rose-700",Piglet:"bg-yellow-50 text-yellow-700",Cock:"bg-red-50 text-red-700",
+  Hen:"bg-pink-50 text-pink-700",Pullet:"bg-purple-50 text-purple-700",Layer:"bg-amber-50 text-amber-700",
+  Broiler:"bg-orange-50 text-orange-700",Bull:"bg-blue-50 text-blue-700",Cow:"bg-emerald-50 text-emerald-700",
+};
+const NAV_CONFIG={
+  dairy:{color:"#166534",tabs:[
+    {id:"dashboard",label:"Dashboard",icon:"▦"},{id:"herd",label:"Herd",icon:"🐄"},
+    {id:"breeding",label:"Breeding",icon:"⚭"},{id:"health",label:"Health",icon:"✚"},
+    {id:"dairy",label:"Dairy Ops",icon:"⊛"},{id:"reports",label:"Reports",icon:"⊞"},
+    {id:"weather",label:"Weather",icon:"☁"},{id:"documents",label:"Documents",icon:"⊟"},
+    {id:"finance",label:"Finance",icon:"$"}
+  ],bottom:["dashboard","herd","breeding","health","dairy"]},
+  pigs:{color:"#92400e",tabs:[
+    {id:"dashboard",label:"Dashboard",icon:"▦"},{id:"pigs",label:"Herd",icon:"🐷"},
+    {id:"breeding",label:"Breeding",icon:"⚭"},{id:"health",label:"Health",icon:"✚"},
+    {id:"production",label:"Production",icon:"⊛"},{id:"reports",label:"Reports",icon:"⊞"},
+    {id:"weather",label:"Weather",icon:"☁"},{id:"documents",label:"Documents",icon:"⊟"},
+    {id:"finance",label:"Finance",icon:"$"}
+  ],bottom:["dashboard","pigs","breeding","health","production"]},
+  chickens:{color:"#b45309",tabs:[
+    {id:"dashboard",label:"Dashboard",icon:"▦"},{id:"flocks",label:"Flocks",icon:"🐔"},
+    {id:"breeders",label:"Breeders",icon:"🥚"},{id:"health",label:"Health",icon:"✚"},
+    {id:"eggs",label:"Eggs",icon:"⊛"},{id:"reports",label:"Reports",icon:"⊞"},
+    {id:"weather",label:"Weather",icon:"☁"},{id:"documents",label:"Documents",icon:"⊟"},
+    {id:"finance",label:"Finance",icon:"$"}
+  ],bottom:["dashboard","flocks","breeders","health","eggs"]},
+  crops:{color:"#166534",tabs:[
+    {id:"dashboard",label:"Dashboard",icon:"▦"},{id:"fields",label:"Fields",icon:"🌾"},
+    {id:"planting",label:"Planting",icon:"🌱"},{id:"harvest",label:"Harvest",icon:"🚜"},
+    {id:"inputs",label:"Inputs",icon:"🧪"},{id:"reports",label:"Reports",icon:"⊞"},
+    {id:"weather",label:"Weather",icon:"☁"},{id:"documents",label:"Documents",icon:"⊟"},
+    {id:"finance",label:"Finance",icon:"$"}
+  ],bottom:["dashboard","fields","planting","harvest","inputs"]},
+};
+
+// ── INBREEDING ─────────────────────────────────────────
+const getLineage=(id,animals,depth=3,visited=new Set())=>{
+  if(!id||depth===0||visited.has(id))return new Set();
+  visited.add(id);
+  const a=animals.find(x=>x.id===id);
+  if(!a)return new Set();
+  const s=new Set();
+  [a.sireId,a.damId].filter(x=>x&&!x.startsWith('EXT_')).forEach(pid=>{
+    s.add(pid);
+    getLineage(pid,animals,depth-1,new Set(visited)).forEach(x=>s.add(x));
+  });
+  return s;
+};
+const getOffspring=(id,animals)=>animals.filter(a=>a.sireId===id||a.damId===id);
+const inbreedingCheck=(maleId,femaleId,animals)=>{
+  if(!maleId||!femaleId||maleId===femaleId)return null;
+  const male=animals.find(a=>a.id===maleId),female=animals.find(a=>a.id===femaleId);
+  if(!male||!female)return null;
+  if(male.id===female.sireId||male.id===female.damId||female.id===male.sireId||female.id===male.damId)
+    return{level:"critical",msg:"⛔ Parent–offspring pairing — do NOT breed."};
+  const shS=male.sireId&&!male.sireId.startsWith('EXT_')&&male.sireId===female.sireId;
+  const shD=male.damId&&!male.damId.startsWith('EXT_')&&male.damId===female.damId;
+  if(shS&&shD)return{level:"critical",msg:"⛔ Full siblings — share both parents. Do NOT breed."};
+  if(shS){const a=animals.find(x=>x.id===male.sireId);return{level:"critical",msg:`⛔ Half siblings — same sire (${a?.name||male.sireId}). Do NOT breed.`};}
+  if(shD){const a=animals.find(x=>x.id===male.damId);return{level:"critical",msg:`⛔ Half siblings — same dam (${a?.name||male.damId}). Do NOT breed.`};}
+  const mL=getLineage(maleId,animals,3),fL=getLineage(femaleId,animals,3);
+  const common=[...mL].filter(id=>fL.has(id)).map(id=>animals.find(a=>a.id===id)).filter(Boolean);
+  if(common.length>0)return{level:"warning",msg:`⚠️ ${common.length} common ancestor${common.length>1?"s":""} within 3 generations: ${common.map(a=>a.name).join(", ")}. Monitor carefully.`};
+  return{level:"safe",msg:"✅ No close relatives within 3 generations — safe to breed."};
+};
+
+// ── CHARTS ────────────────────────────────────────────
+const AreaChart=({data,dataKey,color="#166534",h=120,labelKey="day"})=>{
+  const vals=data.map(d=>+d[dataKey]||0);
+  const max=Math.max(...vals)||1,min=Math.min(...vals);
+  const W=400,H=h,padL=8,padR=8,padT=14,padB=22;
+  const iW=W-padL-padR,iH=H-padT-padB;
+  const px=(i)=>padL+i*(iW/(vals.length-1||1));
+  const py=(v)=>padT+iH-((v-min)/(max-min||1))*iH;
+  const pts=vals.map((v,i)=>[px(i),py(v)]);
+  const linePath=pts.map((p,i)=>(i===0?`M${p[0]},${p[1]}`:`L${p[0]},${p[1]}`)).join(' ');
+  const areaPath=`${linePath} L${pts[pts.length-1][0]},${padT+iH} L${pts[0][0]},${padT+iH} Z`;
+  const gridVals=3;
+  return<svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',display:'block'}}>
+    <defs>
+      <linearGradient id={`ag${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor={color} stopOpacity="0.15"/>
+        <stop offset="100%" stopColor={color} stopOpacity="0.01"/>
+      </linearGradient>
+    </defs>
+    {Array.from({length:gridVals},(_,i)=>{
+      const y=padT+(i/(gridVals-1))*iH;
+      return<line key={i} x1={padL} y1={y} x2={W-padR} y2={y} stroke="#e8ede8" strokeWidth="1" strokeDasharray="3,4"/>;
+    })}
+    <path d={areaPath} fill={`url(#ag${color.replace('#','')})`}/>
+    <path d={linePath} stroke={color} strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    {pts.map((p,i)=><circle key={i} cx={p[0]} cy={p[1]} r="2.5" fill="#fff" stroke={color} strokeWidth="1.5"/>)}
+    {data.map((d,i)=>{
+      const lbl=d[labelKey]||"";
+      if(data.length>8&&i%2!==0)return null;
+      return<text key={i} x={px(i)} y={H-5} textAnchor="middle" fontSize="9" fill="#9ab49a" fontFamily="Inter,system-ui,sans-serif">{lbl}</text>;
+    })}
+  </svg>;
+};
+
+const BarChart=({data,keys=["v"],colors=["#166534","#86efac"],h=110,labelKey="m"})=>{
+  const allVals=data.flatMap(d=>keys.map(k=>+d[k]||0));
+  const max=Math.max(...allVals)||1;
+  const W=400,H=h,padL=8,padR=8,padT=14,padB=20;
+  const iW=W-padL-padR,iH=H-padT-padB;
+  const grpW=iW/data.length,bW=Math.min(12,grpW/keys.length-3);
+  return<svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',display:'block'}}>
+    {[0.25,0.5,0.75,1].map((f,i)=>{
+      const y=padT+iH*(1-f);
+      return<line key={i} x1={padL} y1={y} x2={W-padR} y2={y} stroke="#f0f5f0" strokeWidth="1"/>;
+    })}
+    {data.map((d,i)=>keys.map((k,ki)=>{
+      const v=+d[k]||0,bH=(v/max)*iH;
+      const x=padL+i*grpW+(grpW-keys.length*(bW+3))/2+ki*(bW+3);
+      const y=padT+iH-bH;
+      return<g key={`${i}${ki}`}>
+        <rect x={x} y={y} width={bW} height={Math.max(bH,1)} fill={colors[ki]||colors[0]} rx="3" opacity="0.88"/>
+        {bH>12&&<text x={x+bW/2} y={y-3} textAnchor="middle" fontSize="8" fill={colors[ki]||colors[0]} fontFamily="Inter,system-ui,sans-serif" fontWeight="600">
+          {v>999?Math.round(v/1000)+"k":v}
+        </text>}
+      </g>;
+    }))}
+    {data.map((d,i)=><text key={i} x={padL+i*grpW+grpW/2} y={H-4} textAnchor="middle" fontSize="9" fill="#9ab49a" fontFamily="Inter,system-ui,sans-serif">{d[labelKey]||""}</text>)}
+    <line x1={padL} y1={padT+iH} x2={W-padR} y2={padT+iH} stroke="#e8ede8" strokeWidth="1"/>
+  </svg>;
+};
+
+const DonutChart=({segments,size=72})=>{
+  const total=segments.reduce((a,s)=>a+s.value,0)||1;
+  const r=26,cx=36,cy=36,circ=2*Math.PI*r;
+  let offset=0;
+  return<svg width={size} height={size} viewBox="0 0 72 72">
+    <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f0f5f0" strokeWidth="9"/>
+    {segments.map((s,i)=>{
+      const dash=(s.value/total)*circ,gap=circ-dash;
+      const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={s.color} strokeWidth="9"
+        strokeDasharray={`${dash} ${gap}`} strokeDashoffset={-offset}
+        style={{transform:'rotate(-90deg)',transformOrigin:'36px 36px'}}/>;
+      offset+=dash;return el;
+    })}
+    <circle cx={cx} cy={cy} r={20} fill="white"/>
+  </svg>;
+};
+
+const Spark=({data,dataKey,color="#166534"})=>{
+  const vals=data.map(d=>+d[dataKey]||0);
+  const max=Math.max(...vals)||1,min=Math.min(...vals);
+  const W=60,H=28;
+  const px=(i)=>i*(W/(vals.length-1||1));
+  const py=(v)=>H-2-((v-min)/(max-min||1))*(H-4);
+  const pts=vals.map((v,i)=>[px(i),py(v)]);
+  const line=pts.map((p,i)=>(i===0?`M${p[0]},${p[1]}`:`L${p[0]},${p[1]}`)).join(' ');
+  const area=`${line} L${pts[pts.length-1][0]},${H} L0,${H} Z`;
+  return<svg viewBox={`0 0 ${W} ${H}`} style={{width:60,height:28,flexShrink:0}}>
+    <defs><linearGradient id={`sp${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor={color} stopOpacity="0.2"/><stop offset="100%" stopColor={color} stopOpacity="0"/>
+    </linearGradient></defs>
+    <path d={area} fill={`url(#sp${color.replace('#','')})`}/>
+    <path d={line} stroke={color} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>;
+};
+
+// ── BASE UI ───────────────────────────────────────────
+const Badge=({text,cls=""})=><span className={`badge ${cls}`}>{text}</span>;
+const Btn=({children,onClick,variant="primary",size="md",cls=""})=>{
+  const v=variant==="primary"?"btn-primary":variant==="outline"?"btn-outline":variant==="danger"?"btn-danger":"btn-ghost";
+  const s=size==="sm"?"btn-sm":"";
+  return<button className={`btn ${v} ${s} ${cls}`} onClick={onClick}>{children}</button>;
+};
+const Card=({children,cls=""})=><div className={`card card-hover ${cls}`}>{children}</div>;
+const Lbl=({children})=><p className="section-label">{children}</p>;
+
+const Field=({label,value,onChange,type="text",options=null,hint=""})=><div style={{display:'flex',flexDirection:'column',gap:4}}>
+  <label style={{fontSize:12,fontWeight:600,color:'#6b8b6b',textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</label>
+  {options
+    ?<select value={value} onChange={e=>onChange(e.target.value)}>{options.map(o=><option key={o.value??o} value={o.value??o}>{o.label??o}</option>)}</select>
+    :<input type={type} value={value} onChange={e=>onChange(e.target.value)}/>}
+  {hint&&<span style={{fontSize:11,color:'#9ab49a'}}>{hint}</span>}
+</div>;
+
+const Modal=({open,onClose,title,children})=>{
+  if(!open)return null;
+  return<div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget)onClose()}}>
+    <div className="modal-box">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 20px 14px',borderBottom:'1px solid #e8ede8'}}>
+        <span style={{fontWeight:700,fontSize:16,color:'#0f1f0f'}}>{title}</span>
+        <button onClick={onClose} style={{background:'none',border:'none',fontSize:22,color:'#8ca88c',cursor:'pointer',lineHeight:1,padding:'0 4px'}}>&times;</button>
+      </div>
+      <div style={{padding:'16px 20px 20px'}}>{children}</div>
+    </div>
+  </div>;
+};
+
+const StatCard=({label,value,sub,icon,trend,trendDir="up",spark,sparkKey,color="#166534"})=><div className="stat-card card-hover">
+  <div>
+    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+      <span style={{fontSize:18}}>{icon}</span>
+    </div>
+    <div className="stat-num">{value}</div>
+    <div className="stat-lbl">{label}</div>
+    {sub&&<div className="stat-sub">{sub}</div>}
+    {trend&&<div style={{marginTop:4}}>
+      <span style={{fontSize:11,fontWeight:600,color:trendDir==="up"?"#166534":"#dc2626"}}>
+        {trendDir==="up"?"↑":"↓"} {trend}
+      </span>
+    </div>}
+  </div>
+  {spark&&<Spark data={spark} dataKey={sparkKey||"v"} color={color}/>}
+</div>;
+
+const InbreedingBanner=({result})=>{
+  if(!result)return null;
+  const cls=result.level==="critical"?"inb-critical":result.level==="warning"?"inb-warning":"inb-safe";
+  return<div className={cls}>{result.msg}</div>;
+};
+
+const TimeFilter=({active,setActive})=><div className="time-pills">
+  {["7D","30D","90D"].map(t=><button key={t} className={`time-pill ${active===t?"on":""}`} onClick={()=>setActive(t)}>{t}</button>)}
+</div>;
+
+const LineageSection=({animal,allAnimals,onSelect})=>{
+  const sire=animal.sireId&&!animal.sireId.startsWith('EXT_')?allAnimals.find(a=>a.id===animal.sireId):null;
+  const dam=animal.damId&&!animal.damId.startsWith('EXT_')?allAnimals.find(a=>a.id===animal.damId):null;
+  const offs=getOffspring(animal.id,allAnimals);
+  if(!animal.sireId&&!animal.damId&&offs.length===0)return null;
+  return<div style={{marginTop:14}}>
+    <div className="divider"/>
+    <Lbl>Lineage</Lbl>
+    {(animal.sireId||animal.damId)&&<div style={{marginBottom:8}}>
+      <p style={{fontSize:11,color:'#9ab49a',marginBottom:5,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.04em'}}>Parents</p>
+      <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+        {animal.sireId&&<button onClick={()=>sire&&onSelect(sire)} style={{padding:'4px 10px',borderRadius:7,border:'1px solid',fontSize:12.5,fontWeight:600,cursor:sire?'pointer':'default',background:sire?'#eff6ff':'#f5f5f5',borderColor:sire?'#bfdbfe':'#e5e7eb',color:sire?'#1d4ed8':'#9ca3af',fontFamily:'Inter,system-ui,sans-serif'}}>
+          ♂ {sire?sire.name:animal.sireId} {!sire&&<span style={{fontWeight:400,fontSize:11}}>(ext)</span>}
+        </button>}
+        {animal.damId&&<button onClick={()=>dam&&onSelect(dam)} style={{padding:'4px 10px',borderRadius:7,border:'1px solid',fontSize:12.5,fontWeight:600,cursor:dam?'pointer':'default',background:dam?'#fdf2f8':'#f5f5f5',borderColor:dam?'#fbcfe8':'#e5e7eb',color:dam?'#9d174d':'#9ca3af',fontFamily:'Inter,system-ui,sans-serif'}}>
+          ♀ {dam?dam.name:animal.damId} {!dam&&<span style={{fontWeight:400,fontSize:11}}>(ext)</span>}
+        </button>}
+      </div>
+    </div>}
+    {offs.length>0&&<div>
+      <p style={{fontSize:11,color:'#9ab49a',marginBottom:5,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.04em'}}>Offspring ({offs.length})</p>
+      <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+        {offs.map(o=><button key={o.id} onClick={()=>onSelect(o)} style={{padding:'4px 10px',borderRadius:7,border:'1px solid #b6e8c4',fontSize:12.5,fontWeight:600,background:'#f0fdf4',color:'#166534',cursor:'pointer',fontFamily:'Inter,system-ui,sans-serif'}}>
+          {o.sex==="M"?"♂":"♀"} {o.name}
+        </button>)}
+      </div>
+    </div>}
+  </div>;
+};
+
+// ── LOGIN ─────────────────────────────────────────────
+const LoginScreen=({onLogin})=>{
+  const[email,setEmail]=useState("admin@greenmeadows.co.za");
+  const[pass,setPass]=useState("demo123");
+  const[role,setRole]=useState("superuser");
+  return<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'linear-gradient(135deg,#052e16 0%,#166534 55%,#15803d 100%)'}}>
+    <div style={{background:'#fff',borderRadius:20,boxShadow:'0 24px 80px rgba(0,0,0,0.2)',padding:'36px 32px',width:'100%',maxWidth:380}}>
+      <div style={{textAlign:'center',marginBottom:28}}>
+        <div style={{fontSize:44,lineHeight:1,marginBottom:8}}>🌾</div>
+        <h1 style={{fontSize:22,fontWeight:800,color:'#0f1f0f',letterSpacing:'-0.02em'}}>FarmFlow</h1>
+        <p style={{fontSize:13,color:'#9ab49a',marginTop:3}}>Farm Management System</p>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+        <Field label="Email" value={email} onChange={setEmail} type="email"/>
+        <Field label="Password" value={pass} onChange={setPass} type="password"/>
+        <div>
+          <p style={{fontSize:11,fontWeight:700,color:'#6b8b6b',textTransform:'uppercase',letterSpacing:'0.05em',marginBottom:8}}>Demo Role</p>
+          <div style={{display:'flex',gap:6}}>
+            {["superuser","manager","worker"].map(r=><button key={r} onClick={()=>setRole(r)} style={{flex:1,padding:'7px 4px',borderRadius:8,fontSize:12,fontWeight:600,border:`1.5px solid ${role===r?"#166534":"#e0e8e0"}`,background:role===r?"#166534":"#fff",color:role===r?"#fff":"#7a9a7a",cursor:'pointer',fontFamily:'Inter,system-ui,sans-serif',transition:'all 0.12s'}}>{r}</button>)}
+          </div>
+        </div>
+        <button className="btn btn-primary" style={{width:'100%',justifyContent:'center',padding:'10px',fontSize:14,marginTop:4}} onClick={()=>onLogin({email,role})}>
+          Sign in →
+        </button>
+      </div>
+      <p style={{textAlign:'center',fontSize:11,color:'#c4d9c4',marginTop:16}}>Any credentials accepted in demo</p>
+    </div>
+  </div>;
+};
+
+// ── ONBOARDING ────────────────────────────────────────
+const OnboardingWizard=({onComplete})=>{
+  const[step,setStep]=useState(0);
+  const[farmType,setFarmType]=useState("");
+  const[farmName,setFarmName]=useState("");
+  const[loc,setLoc]=useState("");
+  const[firstName,setFirstName]=useState("");
+  const steps=["Farm Type","Farm Details","First Entry"];
+  return<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:16,background:'linear-gradient(135deg,#052e16 0%,#166534 100%)'}}>
+    <div style={{background:'#fff',borderRadius:20,boxShadow:'0 24px 80px rgba(0,0,0,0.2)',padding:'32px 28px',width:'100%',maxWidth:460}}>
+      <div style={{textAlign:'center',marginBottom:24}}>
+        <div style={{fontSize:36,marginBottom:6}}>🌾</div>
+        <h2 style={{fontSize:18,fontWeight:800,letterSpacing:'-0.02em',color:'#0f1f0f'}}>Set Up Your Farm</h2>
+        <p style={{fontSize:12,color:'#9ab49a',marginTop:3}}>Step {step+1} of {steps.length} — {steps[step]}</p>
+        <div style={{display:'flex',gap:4,marginTop:10,justifyContent:'center'}}>
+          {steps.map((_,i)=><div key={i} style={{height:4,borderRadius:4,transition:'all 0.2s',width:i<=step?36:20,background:i<=step?'#166534':'#e8ede8'}}/>)}
+        </div>
+      </div>
+      {step===0&&<div style={{display:'flex',flexDirection:'column',gap:8}}>
+        {FARMING_TYPES.map(ft=><button key={ft.id} onClick={()=>setFarmType(ft.id)} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:10,border:`1.5px solid ${farmType===ft.id?"#166534":"#e8ede8"}`,background:farmType===ft.id?"#f0fdf4":"#fff",cursor:'pointer',textAlign:'left',transition:'all 0.12s',fontFamily:'Inter,system-ui,sans-serif'}}>
+          <span style={{fontSize:26}}>{ft.icon}</span>
+          <div><p style={{fontWeight:700,fontSize:14,color:'#0f1f0f'}}>{ft.label}</p><p style={{fontSize:12,color:'#9ab49a'}}>{ft.desc}</p></div>
+        </button>)}
+        <Btn onClick={()=>farmType&&setStep(1)} cls="w-full" style={{marginTop:6}}>Next →</Btn>
+      </div>}
+      {step===1&&<div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <Field label="Farm Name" value={farmName} onChange={setFarmName}/>
+        <Field label="Location / Region" value={loc} onChange={setLoc}/>
+        <Field label="Farm Size (ha)" value="" onChange={()=>{}} type="number"/>
+        <div style={{display:'flex',gap:8,marginTop:4}}>
+          <Btn onClick={()=>setStep(0)} variant="outline">Back</Btn>
+          <button className="btn btn-primary" style={{flex:1,justifyContent:'center'}} onClick={()=>farmName&&setStep(2)}>Next →</button>
+        </div>
+      </div>}
+      {step===2&&<div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <p style={{fontSize:13,color:'#6b8b6b'}}>Add your first {farmType==="crops"?"field":farmType==="chickens"?"flock or bird":"animal"} to get started.</p>
+        <Field label={farmType==="crops"?"Field Name":farmType==="chickens"?"Flock / Bird Name":"Name / Tag"} value={firstName} onChange={setFirstName}/>
+        {farmType==="crops"&&<Field label="Crop" value="" onChange={()=>{}} options={["Maize","Soybeans","Sunflower","Vegetables","Wheat","Other"]}/>}
+        {farmType==="pigs"&&<Field label="Role" value="" onChange={()=>{}} options={["Sow","Gilt","Boar","Piglet"]}/>}
+        {farmType==="chickens"&&<Field label="Type" value="" onChange={()=>{}} options={["Layer Flock","Broiler Batch","Breeding Bird"]}/>}
+        {(farmType==="dairy"||!farmType)&&<Field label="Breed" value="" onChange={()=>{}}/>}
+        <div style={{display:'flex',gap:8,marginTop:4}}>
+          <Btn onClick={()=>setStep(1)} variant="outline">Back</Btn>
+          <button className="btn btn-primary" style={{flex:1,justifyContent:'center'}} onClick={()=>onComplete({farmType,farmName,loc})}>Launch FarmFlow 🚀</button>
+        </div>
+      </div>}
+    </div>
+  </div>;
+};
+
+// ── DAIRY MODULE ──────────────────────────────────────
+const DairyDashboard=({cows})=>{
+  const[tf,setTf]=useState("7D");
+  const active=cows.filter(c=>c.status==="Active").length;
+  const totalMilk=cows.filter(c=>c.milk).reduce((a,c)=>a+(c.milk||0),0);
+  const hCount={Active:active,Dry:cows.filter(c=>c.status==="Dry").length,Heifer:cows.filter(c=>c.role==="Heifer").length};
+  return<div style={{display:'flex',flexDirection:'column',gap:14}}>
+    <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+      <StatCard label="Active Cows" value={active} icon="🐄" trend="+2 this month" trendDir="up" spark={[{v:18},{v:19},{v:20},{v:21},{v:20},{v:22}]} sparkKey="v"/>
+      <StatCard label="Daily Yield" value={`${totalMilk}L`} icon="🥛" trend="+4% vs avg" trendDir="up" spark={MILK_WEEK} sparkKey="am"/>
+      <StatCard label="Avg DIM" value="87" sub="Days in milk" icon="📅" spark={[{v:70},{v:75},{v:80},{v:85},{v:87},{v:87}]} sparkKey="v"/>
+      <StatCard label="Fat %" value="4.1%" sub="Protein 3.2%" icon="🧪" trend="+0.1%" trendDir="up"/>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Milk Production (L)</span><TimeFilter active={tf} setActive={setTf}/></div>
+        <AreaChart data={MILK_WEEK} dataKey="am" color="#166534" h={110} labelKey="day"/>
+        <div style={{display:'flex',gap:16,marginTop:8,fontSize:11,color:'#9ab49a'}}>
+          <span><span style={{display:'inline-block',width:10,height:3,background:'#166534',borderRadius:2,verticalAlign:'middle',marginRight:4}}/>AM</span>
+          <span><span style={{display:'inline-block',width:10,height:3,background:'#86efac',borderRadius:2,verticalAlign:'middle',marginRight:4}}/>PM</span>
+        </div>
+      </Card>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Monthly Volume (L)</span></div>
+        <BarChart data={MILK_MONTHLY} keys={["v"]} colors={["#166534"]} h={110} labelKey="m"/>
+      </Card>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Herd Status</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <DonutChart segments={[{value:hCount.Active,color:'#166534'},{value:hCount.Dry,color:'#0ea5e9'},{value:hCount.Heifer,color:'#8b5cf6'}]} size={80}/>
+          <div style={{fontSize:12,display:'flex',flexDirection:'column',gap:5}}>
+            {[{lbl:"Active",val:hCount.Active,c:'#166534'},{lbl:"Dry",val:hCount.Dry,c:'#0ea5e9'},{lbl:"Heifer",val:hCount.Heifer,c:'#8b5cf6'}].map(s=><div key={s.lbl} style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{width:8,height:8,borderRadius:'50%',background:s.c,flexShrink:0,display:'inline-block'}}/>
+              <span style={{color:'#6b8b6b'}}>{s.lbl}:</span><span style={{fontWeight:700,color:'#0f1f0f'}}>{s.val}</span>
+            </div>)}
+          </div>
+        </div>
+      </Card>
+      <Card>
+        <Lbl>Alerts & Actions</Lbl>
+        {[{icon:"⚠️",text:"2 cows due for preg. check",color:"#fffbeb"},{icon:"💉",text:"Vaccination batch in 3 days",color:"#eff6ff"},{icon:"🔵",text:"Luna — dry-off day 174",color:"#f0f9ff"}].map((a,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 9px',borderRadius:8,background:a.color,marginBottom:5,fontSize:13}}>
+          <span>{a.icon}</span><span style={{color:'#374151'}}>{a.text}</span>
+        </div>)}
+      </Card>
+    </div>
+  </div>;
+};
+
+const HerdTab=({cows,setCows,onSelect})=>{
+  const[showAdd,setShowAdd]=useState(false);
+  const[name,setName]=useState("");const[breed,setBreed]=useState("");const[sex,setSex]=useState("F");
+  const[search,setSearch]=useState("");const[filter,setFilter]=useState("All");
+  const add=()=>{if(!name)return;setCows(p=>[...p,{id:`C${String(p.length+1).padStart(3,"0")}`,name,breed:breed||"Mixed",sex,dob:new Date().toISOString().split("T")[0],status:"Heifer",role:"Heifer",sireId:null,damId:null,milk:0,health:"Good"}]);setName("");setBreed("");setShowAdd(false);};
+  const filtered=cows.filter(c=>{
+    const mF=filter==="All"||c.status===filter||c.role===filter;
+    const mS=c.name.toLowerCase().includes(search.toLowerCase())||c.id.toLowerCase().includes(search.toLowerCase());
+    return mF&&mS;
+  });
+  return<div style={{display:'flex',flexDirection:'column',gap:10}}>
+    <div style={{display:'flex',gap:8}}>
+      <input style={{flex:1}} placeholder="Search by name or ID…" value={search} onChange={e=>setSearch(e.target.value)}/>
+      <Btn onClick={()=>setShowAdd(!showAdd)} size="sm">+ Add</Btn>
+    </div>
+    {showAdd&&<Card cls="" style={{border:'1.5px solid #b6e8c4',background:'#f0fdf4'}}>
+      <Lbl>Quick Add Cow</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <Field label="Name" value={name} onChange={setName}/>
+        <Field label="Breed" value={breed} onChange={setBreed}/>
+        <Field label="Sex" value={sex} onChange={setSex} options={[{value:"F",label:"Female"},{value:"M",label:"Male"}]}/>
+      </div>
+      <div style={{display:'flex',gap:6}}><Btn onClick={add}>Add Cow</Btn><Btn onClick={()=>setShowAdd(false)} variant="outline">Cancel</Btn></div>
+    </Card>}
+    <div style={{display:'flex',gap:5,overflowX:'auto',paddingBottom:2}}>
+      {["All","Active","Dry","Heifer","Sick"].map(f=><button key={f} onClick={()=>setFilter(f)} style={{padding:'4px 12px',borderRadius:20,fontSize:12,fontWeight:600,border:'1px solid',borderColor:filter===f?"#166534":"#e8ede8",background:filter===f?"#166534":"#fff",color:filter===f?"#fff":"#7a9a7a",cursor:'pointer',fontFamily:'Inter,system-ui,sans-serif',whiteSpace:'nowrap'}}>{f}</button>)}
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:4}}>
+      {filtered.map(c=><div key={c.id} className="animal-row" onClick={()=>onSelect(c)}>
+        <div className="avatar" style={{width:38,height:38,background:'#f0fdf4',fontSize:20}}>{c.sex==="M"?"🐂":"🐄"}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <p style={{fontWeight:600,fontSize:13.5,color:'#0f1f0f'}}>{c.name} <span style={{fontWeight:400,color:'#9ab49a',fontSize:12}}>#{c.id}</span></p>
+          <p style={{fontSize:11.5,color:'#9ab49a'}}>{c.breed}{c.milk?` · ${c.milk}L/day`:""}</p>
+        </div>
+        <Badge text={c.status} cls={SC[c.status]||"bg-gray-100 text-gray-500"}/>
+        <span style={{fontSize:14,color:'#c4d9c4'}}>›</span>
+      </div>)}
+    </div>
+  </div>;
+};
+
+const CowDetail=({cow,allCows,onBack,onSelect})=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <button onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#166534',background:'none',border:'none',cursor:'pointer',padding:'2px 0',fontFamily:'Inter,system-ui,sans-serif'}}>← Back to Herd</button>
+  <Card>
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+      <div style={{width:56,height:56,borderRadius:14,background:'#f0fdf4',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>{cow.sex==="M"?"🐂":"🐄"}</div>
+      <div style={{flex:1}}>
+        <h2 style={{fontSize:18,fontWeight:800,letterSpacing:'-0.02em',color:'#0f1f0f'}}>{cow.name}</h2>
+        <p style={{fontSize:12.5,color:'#9ab49a'}}>#{cow.id} · {cow.breed}</p>
+        <div style={{marginTop:4}}><Badge text={cow.status} cls={SC[cow.status]||"bg-gray-100 text-gray-500"}/></div>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,fontSize:13}}>
+      {[["Born",cow.dob],["Sex",cow.sex==="M"?"Male":"Female"],cow.milk!=null&&["Milk/day",`${cow.milk}L`],cow.daysInMilk&&["DIM",cow.daysInMilk],["Health",cow.health]].filter(Boolean).map(([k,v])=><div key={k}>
+        <span style={{color:'#9ab49a'}}>{k}: </span><span style={{fontWeight:600}}>{v}</span>
+      </div>)}
+    </div>
+    <LineageSection animal={cow} allAnimals={allCows} onSelect={onSelect}/>
+  </Card>
+</div>;
+
+const BreedingTabDairy=({cows})=>{
+  const[sireId,setSireId]=useState("");const[damId,setDamId]=useState("");
+  const result=inbreedingCheck(sireId,damId,cows);
+  const bulls=cows.filter(c=>c.sex==="M");
+  const females=cows.filter(c=>c.sex==="F");
+  return<div style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Live Inbreeding Checker</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <Field label="Sire (Bull)" value={sireId} onChange={setSireId} options={[{value:"",label:"— Select Bull —"},...bulls.map(b=>({value:b.id,label:`${b.name} (${b.id})`}))]}/>
+        <Field label="Dam (Cow)" value={damId} onChange={setDamId} options={[{value:"",label:"— Select Cow —"},...females.map(f=>({value:f.id,label:`${f.name} (${f.id})`}))]}/>
+      </div>
+      <InbreedingBanner result={result}/>
+      <p style={{fontSize:11,color:'#c4d9c4',marginTop:6}}>💡 Try: Braveheart + Luna, then Braveheart + Dolly</p>
+    </Card>
+    <Card>
+      <Lbl>Recent Breeding Records</Lbl>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{["Sire","Dam","Date","Outcome"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 0',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.05em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+        <tbody>
+          {[{s:"Braveheart",d:"Daisy",date:"2024-01-15",out:"Confirmed Pregnant"},{s:"EXT Titan",d:"Bessie",date:"2023-12-01",out:"Calved – Heifer"}].map((r,i)=><tr key={i}>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>♂ {r.s}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>♀ {r.d}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5',color:'#9ab49a'}}>{r.date}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}><Badge text={r.out} cls="bg-blue-50 text-blue-700"/></td>
+          </tr>)}
+        </tbody>
+      </table>
+    </Card>
+  </div>;
+};
+
+const DairyOpsTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Today AM" value="460L" icon="☀️" trend="+3% avg" trendDir="up"/>
+    <StatCard label="Today PM" value="395L" icon="🌙"/>
+    <StatCard label="30-day Total" value="25,800L" icon="📦"/>
+    <StatCard label="Fat %" value="4.1%" sub="Protein 3.2%" icon="🧪"/>
+  </div>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Milking Schedule</Lbl>
+      {[{ses:"Morning",time:"05:30",cows:22,yield:"460L"},{ses:"Evening",time:"16:00",cows:22,yield:"395L"}].map((s,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:i===0?'1px solid #f0f5f0':'none',fontSize:13}}>
+        <span style={{fontWeight:600}}>{s.ses}</span><span style={{color:'#9ab49a'}}>{s.time}</span><span>{s.cows} cows</span><span style={{fontWeight:700,color:'#166534'}}>{s.yield}</span>
+      </div>)}
+    </Card>
+    <Card>
+      <Lbl>Feed Management</Lbl>
+      {[{f:"TMR Ration",q:"650 kg/day"},{f:"Concentrate",q:"220 kg/day"},{f:"Hay",q:"80 bales/wk"}].map((f,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #f0f5f0',fontSize:13}}>
+        <span style={{color:'#374151'}}>{f.f}</span><span style={{fontWeight:600,color:'#166534'}}>{f.q}</span>
+      </div>)}
+    </Card>
+  </div>
+</div>;
+
+// ── PIG MODULE ────────────────────────────────────────
+const PigDashboard=({pigs})=>{
+  const[tf,setTf]=useState("30D");
+  const sows=pigs.filter(p=>["Sow","Gilt"].includes(p.role)).length;
+  const boars=pigs.filter(p=>p.role==="Boar").length;
+  const piglets=pigs.filter(p=>p.role==="Piglet").length;
+  return<div style={{display:'flex',flexDirection:'column',gap:14}}>
+    <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+      <StatCard label="Total Pigs" value={pigs.length} icon="🐷" trend="+3 this month" trendDir="up"/>
+      <StatCard label="Sows / Gilts" value={sows} icon="🐖" spark={[{v:4},{v:5},{v:5},{v:6},{v:6},{v:6}]} sparkKey="v" color="#f97316"/>
+      <StatCard label="Boars" value={boars} icon="🐗"/>
+      <StatCard label="Piglets" value={piglets} icon="🐽" trend="2 litters due" trendDir="up"/>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Monthly Farrowings</span><TimeFilter active={tf} setActive={setTf}/></div>
+        <BarChart data={[{m:"Oct",v:4},{m:"Nov",v:6},{m:"Dec",v:5},{m:"Jan",v:7},{m:"Feb",v:5},{m:"Mar",v:8}]} keys={["v"]} colors={["#f97316"]} h={105} labelKey="m"/>
+      </Card>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Herd Composition</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <DonutChart segments={[{value:sows,color:'#ec4899'},{value:boars,color:'#f97316'},{value:piglets,color:'#fbbf24'}]} size={80}/>
+          <div style={{fontSize:12,display:'flex',flexDirection:'column',gap:5}}>
+            {[{l:"Sows/Gilts",v:sows,c:'#ec4899'},{l:"Boars",v:boars,c:'#f97316'},{l:"Piglets",v:piglets,c:'#fbbf24'}].map(s=><div key={s.l} style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{width:8,height:8,borderRadius:'50%',background:s.c,display:'inline-block',flexShrink:0}}/>
+              <span style={{color:'#6b8b6b'}}>{s.l}:</span><span style={{fontWeight:700}}>{s.v}</span>
+            </div>)}
+          </div>
+        </div>
+      </Card>
+    </div>
+    <Card>
+      <Lbl>⚠️ Inbreeding Alerts</Lbl>
+      {[{pair:"Goliath × Rosie",note:"Parent-offspring — Acorn & Pippa already produced",level:"critical"},{pair:"Titan × Rosie",note:"Full siblings — same sire and dam",level:"critical"},{pair:"Titan × Honey",note:"Half siblings via Goliath",level:"critical"}].map((a,i)=><div key={i} className={`inb-${a.level}`} style={{marginTop:i===0?0:6}}>
+        <span style={{fontWeight:700}}>{a.pair}</span> — {a.note}
+      </div>)}
+    </Card>
+  </div>;
+};
+
+const PigsTab=({pigs,setPigs,onSelect})=>{
+  const[showAdd,setShowAdd]=useState(false);
+  const[name,setName]=useState("");const[breed,setBreed]=useState("");const[role,setRole]=useState("Gilt");
+  const[search,setSearch]=useState("");
+  const add=()=>{if(!name)return;setPigs(p=>[...p,{id:`P${String(p.length+1).padStart(3,"0")}`,name,sex:["Boar"].includes(role)?"M":"F",breed:breed||"Mixed",dob:new Date().toISOString().split("T")[0],status:"Active",role,sireId:null,damId:null,weight:0,health:"Good"}]);setName("");setBreed("");setShowAdd(false);};
+  const filtered=pigs.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.id.toLowerCase().includes(search.toLowerCase()));
+  return<div style={{display:'flex',flexDirection:'column',gap:10}}>
+    <div style={{display:'flex',gap:8}}>
+      <input style={{flex:1}} placeholder="Search pigs…" value={search} onChange={e=>setSearch(e.target.value)}/>
+      <Btn onClick={()=>setShowAdd(!showAdd)} size="sm">+ Add</Btn>
+    </div>
+    {showAdd&&<Card cls="" style={{border:'1.5px solid #fed7aa',background:'#fff7ed'}}>
+      <Lbl>Quick Add Pig</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <Field label="Name / Tag" value={name} onChange={setName}/>
+        <Field label="Breed" value={breed} onChange={setBreed}/>
+        <Field label="Role" value={role} onChange={setRole} options={["Sow","Gilt","Boar","Barrow","Piglet"]}/>
+      </div>
+      <div style={{display:'flex',gap:6}}><Btn onClick={add}>Add Pig</Btn><Btn onClick={()=>setShowAdd(false)} variant="outline">Cancel</Btn></div>
+    </Card>}
+    <div style={{display:'flex',flexDirection:'column',gap:4}}>
+      {filtered.map(p=><div key={p.id} className="animal-row" onClick={()=>onSelect(p)}>
+        <div className="avatar" style={{width:38,height:38,background:'#fff7ed',fontSize:20}}>{p.sex==="M"?"🐗":"🐖"}</div>
+        <div style={{flex:1}}>
+          <p style={{fontWeight:600,fontSize:13.5}}>{p.name} <span style={{fontWeight:400,color:'#9ab49a',fontSize:12}}>#{p.id}</span></p>
+          <p style={{fontSize:11.5,color:'#9ab49a'}}>{p.breed} · {p.weight}kg</p>
+        </div>
+        <Badge text={p.role} cls={SC[p.role]||"bg-gray-100 text-gray-500"}/>
+        <span style={{fontSize:14,color:'#c4d9c4'}}>›</span>
+      </div>)}
+    </div>
+  </div>;
+};
+
+const PigDetail=({pig,allPigs,onBack,onSelect})=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <button onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#92400e',background:'none',border:'none',cursor:'pointer',padding:'2px 0',fontFamily:'Inter,system-ui,sans-serif'}}>← Back to Herd</button>
+  <Card>
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+      <div style={{width:56,height:56,borderRadius:14,background:'#fff7ed',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>{pig.sex==="M"?"🐗":"🐖"}</div>
+      <div style={{flex:1}}>
+        <h2 style={{fontSize:18,fontWeight:800,letterSpacing:'-0.02em'}}>{pig.name}</h2>
+        <p style={{fontSize:12.5,color:'#9ab49a'}}>#{pig.id} · {pig.breed}</p>
+        <div style={{marginTop:4}}><Badge text={pig.role} cls={SC[pig.role]||"bg-gray-100 text-gray-500"}/></div>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,fontSize:13}}>
+      {[["Born",pig.dob],["Weight",`${pig.weight}kg`],["Sex",pig.sex==="M"?"Male":"Female"],pig.litters!=null&&["Litters",pig.litters],["Health",pig.health]].filter(Boolean).map(([k,v])=><div key={k}>
+        <span style={{color:'#9ab49a'}}>{k}: </span><span style={{fontWeight:600}}>{v}</span>
+      </div>)}
+    </div>
+    <LineageSection animal={pig} allAnimals={allPigs} onSelect={onSelect}/>
+  </Card>
+</div>;
+
+const BreedingTabPigs=({pigs})=>{
+  const[boarId,setBoarId]=useState("");const[sowId,setSowId]=useState("");
+  const result=inbreedingCheck(boarId,sowId,pigs);
+  const boars=pigs.filter(p=>p.sex==="M"&&p.role==="Boar");
+  const sows=pigs.filter(p=>p.sex==="F"&&["Sow","Gilt"].includes(p.role));
+  const risky=[{b:"P003",s:"P006",l:"Goliath × Rosie"},{b:"P005",s:"P006",l:"Titan × Rosie"},{b:"P005",s:"P007",l:"Titan × Honey"}];
+  return<div style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Live Inbreeding Checker</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <Field label="Boar" value={boarId} onChange={setBoarId} options={[{value:"",label:"— Select Boar —"},...boars.map(b=>({value:b.id,label:`${b.name} (${b.id})`}))]}/>
+        <Field label="Sow / Gilt" value={sowId} onChange={setSowId} options={[{value:"",label:"— Select Sow —"},...sows.map(s=>({value:s.id,label:`${s.name} (${s.id})`}))]}/>
+      </div>
+      <InbreedingBanner result={result}/>
+      <p style={{fontSize:11,color:'#c4d9c4',marginTop:6}}>💡 Try: Goliath + Rosie · Titan + Rosie · Storm + Honey</p>
+    </Card>
+    <Card>
+      <Lbl>Known Risky Pairs</Lbl>
+      {risky.map((r,i)=>{const res=inbreedingCheck(r.b,r.s,pigs);return<div key={i} className={`inb-${res?.level||"safe"}`} style={{marginTop:i===0?0:6}}>
+        <span style={{fontWeight:700}}>{r.l}</span>{res&&` — ${res.msg.replace(/^[⛔⚠️✅]\s*/,"")}`}
+      </div>;})}
+    </Card>
+    <Card>
+      <Lbl>Litter Records</Lbl>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{["Boar","Sow","Date","Born","Alive"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 0',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.04em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+        <tbody>
+          {[{b:"Titan",s:"Lady",d:"2024-08-10",born:10,alive:9},{b:"Goliath",s:"Bella",d:"2024-06-22",born:12,alive:11}].map((r,i)=><tr key={i}>
+            {[r.b,r.s,r.d,r.born,<span style={{fontWeight:700,color:'#166534'}}>{r.alive}</span>].map((v,j)=><td key={j} style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>{v}</td>)}
+          </tr>)}
+        </tbody>
+      </table>
+    </Card>
+  </div>;
+};
+
+const ProductionTabPigs=({pigs})=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Avg Litter Size" value="10.5" icon="🐽" trend="+0.5" trendDir="up"/>
+    <StatCard label="Born Alive" value="91%" icon="✅"/>
+    <StatCard label="Pre-wean Mortality" value="8%" icon="📉" trendDir="down"/>
+    <StatCard label="Days to Market" value="168" icon="📅"/>
+  </div>
+  <Card>
+    <div className="chart-hdr"><span className="chart-title">Litters per Month</span></div>
+    <BarChart data={[{m:"Oct",v:4},{m:"Nov",v:6},{m:"Dec",v:5},{m:"Jan",v:7},{m:"Feb",v:5},{m:"Mar",v:8}]} keys={["v"]} colors={["#f97316"]} h={100} labelKey="m"/>
+  </Card>
+  <Card>
+    <Lbl>Weight Gain Tracker (Active Boars)</Lbl>
+    <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+      <thead><tr>{["Animal","Breed","Current Weight","FCR"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 0',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.04em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+      <tbody>{pigs.filter(p=>p.role==="Boar").map((p,i)=><tr key={p.id}>
+        <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5',fontWeight:600}}>{p.name}</td>
+        <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5',color:'#9ab49a'}}>{p.breed}</td>
+        <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5',fontWeight:600,color:'#166534'}}>{p.weight}kg</td>
+        <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>{(2+i*0.1).toFixed(1)}</td>
+      </tr>)}</tbody>
+    </table>
+  </Card>
+</div>;
+
+// ── CHICKEN MODULE ────────────────────────────────────
+const ChickenDashboard=({flocks,birds})=>{
+  const[tf,setTf]=useState("7D");
+  const totalBirds=flocks.reduce((a,f)=>a+f.count,0);
+  const totalEggs=flocks.filter(f=>f.type==="Layer").reduce((a,f)=>a+(f.eggDay||0),0);
+  const layRate=Math.round((totalEggs/flocks.filter(f=>f.type==="Layer").reduce((a,f)=>a+f.count,0))*100)||0;
+  return<div style={{display:'flex',flexDirection:'column',gap:14}}>
+    <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+      <StatCard label="Total Flocks" value={flocks.length} icon="🐔" trend="+1 batch" trendDir="up"/>
+      <StatCard label="Total Birds" value={totalBirds.toLocaleString()} icon="🐓" spark={[{v:1400},{v:1500},{v:1550},{v:1600},{v:1650}]} sparkKey="v" color="#d97706"/>
+      <StatCard label="Eggs Today" value={totalEggs} icon="🥚" trend="+3% vs avg" trendDir="up"/>
+      <StatCard label="Lay Rate" value={`${layRate}%`} sub="Layer flocks" icon="📊"/>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">7-Day Egg Production</span><TimeFilter active={tf} setActive={setTf}/></div>
+        <AreaChart data={EGG_WEEK} dataKey="v" color="#d97706" h={110} labelKey="day"/>
+      </Card>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Flock Breakdown</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <DonutChart segments={[{value:flocks.filter(f=>f.type==="Layer").reduce((a,f)=>a+f.count,0),color:'#f59e0b'},{value:flocks.filter(f=>f.type==="Broiler").reduce((a,f)=>a+f.count,0),color:'#f97316'},{value:birds.length,color:'#8b5cf6'}]} size={80}/>
+          <div style={{fontSize:12,display:'flex',flexDirection:'column',gap:5}}>
+            {[{l:"Layers",v:flocks.filter(f=>f.type==="Layer").reduce((a,f)=>a+f.count,0),c:'#f59e0b'},{l:"Broilers",v:flocks.filter(f=>f.type==="Broiler").reduce((a,f)=>a+f.count,0),c:'#f97316'},{l:"Breeders",v:birds.length,c:'#8b5cf6'}].map(s=><div key={s.l} style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{width:8,height:8,borderRadius:'50%',background:s.c,display:'inline-block',flexShrink:0}}/>
+              <span style={{color:'#6b8b6b'}}>{s.l}:</span><span style={{fontWeight:700}}>{s.v}</span>
+            </div>)}
+          </div>
+        </div>
+      </Card>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <Lbl>Flock Status</Lbl>
+        {flocks.map(f=><div key={f.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid #f0f5f0',fontSize:13}}>
+          <div><p style={{fontWeight:600}}>{f.name}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>House {f.henHouseNo} · {f.breed}</p></div>
+          <div style={{textAlign:'right'}}><Badge text={f.type} cls={f.type==="Layer"?"bg-amber-50 text-amber-700":"bg-orange-50 text-orange-700"}/>
+            <p style={{fontSize:11.5,color:'#9ab49a',marginTop:2}}>{f.count.toLocaleString()} birds</p></div>
+        </div>)}
+      </Card>
+      <Card>
+        <Lbl>Alerts</Lbl>
+        {[{icon:"⚠️",text:"Pearl & Amber are siblings — monitor Rex pairings",color:"#fffbeb"},{icon:"💉",text:"Newcastle vaccine due — Broiler Batch 7",color:"#eff6ff"},{icon:"📦",text:"Batch 7 approaching market weight (2.1kg avg)",color:"#f0fdf4"}].map((a,i)=><div key={i} style={{display:'flex',gap:8,padding:'7px 9px',borderRadius:8,background:a.color,marginBottom:5,fontSize:13}}>
+          <span style={{flexShrink:0}}>{a.icon}</span><span style={{color:'#374151'}}>{a.text}</span>
+        </div>)}
+      </Card>
+    </div>
+  </div>;
+};
+
+const FlocksTab=({flocks,setFlocks})=>{
+  const[showAdd,setShowAdd]=useState(false);
+  const[name,setName]=useState("");const[type,setType]=useState("Layer");const[count,setCount]=useState("");
+  const add=()=>{if(!name)return;setFlocks(p=>[...p,{id:`F${String(p.length+1).padStart(3,"0")}`,name,type,breed:"Mixed",count:parseInt(count)||0,henHouseNo:`H${p.length+4}`,dob:new Date().toISOString().split("T")[0],status:"Active",eggDay:0,mortality:0}]);setName("");setCount("");setShowAdd(false);};
+  return<div style={{display:'flex',flexDirection:'column',gap:10}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <p style={{fontWeight:700,fontSize:14,color:'#0f1f0f'}}>Flock Management</p>
+      <Btn onClick={()=>setShowAdd(!showAdd)} size="sm">+ Add Flock</Btn>
+    </div>
+    {showAdd&&<Card cls="" style={{border:'1.5px solid #fde68a',background:'#fffbeb'}}>
+      <Lbl>Add Flock / Batch</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <Field label="Flock Name" value={name} onChange={setName}/>
+        <Field label="Type" value={type} onChange={setType} options={["Layer","Broiler","Breeder"]}/>
+        <Field label="Bird Count" value={count} onChange={setCount} type="number"/>
+      </div>
+      <div style={{display:'flex',gap:6}}><Btn onClick={add}>Add</Btn><Btn onClick={()=>setShowAdd(false)} variant="outline">Cancel</Btn></div>
+    </Card>}
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      {flocks.map(f=><Card key={f.id}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+          <div><p style={{fontWeight:700,fontSize:14}}>{f.name}</p><p style={{fontSize:12,color:'#9ab49a'}}>{f.breed} · House {f.henHouseNo}</p></div>
+          <Badge text={f.type} cls={f.type==="Layer"?"bg-amber-50 text-amber-700":"bg-orange-50 text-orange-700"}/>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8,fontSize:12}}>
+          <div><p style={{color:'#9ab49a',fontSize:11}}>Birds</p><p style={{fontWeight:700,fontSize:16}}>{f.count.toLocaleString()}</p></div>
+          {f.eggDay!=null&&f.eggDay>0&&<div><p style={{color:'#9ab49a',fontSize:11}}>Eggs/day</p><p style={{fontWeight:700,fontSize:16,color:'#d97706'}}>{f.eggDay}</p></div>}
+          {f.avgWeight&&<div><p style={{color:'#9ab49a',fontSize:11}}>Avg Weight</p><p style={{fontWeight:700,fontSize:16}}>{f.avgWeight}kg</p></div>}
+          {f.fcr&&<div><p style={{color:'#9ab49a',fontSize:11}}>FCR</p><p style={{fontWeight:700,fontSize:16}}>{f.fcr}</p></div>}
+          <div><p style={{color:'#9ab49a',fontSize:11}}>Mortality</p><p style={{fontWeight:700,fontSize:16,color:'#dc2626'}}>{f.mortality}</p></div>
+        </div>
+      </Card>)}
+    </div>
+  </div>;
+};
+
+const BreedersTab=({birds})=>{
+  const[cockId,setCockId]=useState("");const[henId,setHenId]=useState("");
+  const[sel,setSel]=useState(null);
+  const cocks=birds.filter(b=>b.sex==="M");const hens=birds.filter(b=>b.sex==="F");
+  const result=inbreedingCheck(cockId,henId,birds);
+  if(sel)return<div style={{display:'flex',flexDirection:'column',gap:12}}>
+    <button onClick={()=>setSel(null)} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,fontWeight:600,color:'#b45309',background:'none',border:'none',cursor:'pointer',fontFamily:'Inter,system-ui,sans-serif'}}>← Back to Breeders</button>
+    <Card>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+        <div style={{width:56,height:56,borderRadius:14,background:'#fffbeb',display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,flexShrink:0}}>{sel.sex==="M"?"🐓":"🐔"}</div>
+        <div><h2 style={{fontSize:18,fontWeight:800,letterSpacing:'-0.02em'}}>{sel.name}</h2><p style={{fontSize:12.5,color:'#9ab49a'}}>#{sel.id} · {sel.breed}</p><div style={{marginTop:4}}><Badge text={sel.role} cls={sel.sex==="M"?"bg-red-50 text-red-700":"bg-pink-50 text-pink-700"}/></div></div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,fontSize:13}}>
+        {[["Born",sel.dob],["Weight",`${sel.weight}kg`]].map(([k,v])=><div key={k}><span style={{color:'#9ab49a'}}>{k}: </span><span style={{fontWeight:600}}>{v}</span></div>)}
+      </div>
+      <LineageSection animal={sel} allAnimals={birds} onSelect={setSel}/>
+    </Card>
+  </div>;
+  return<div style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Pair Compatibility Check</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+        <Field label="Cock" value={cockId} onChange={setCockId} options={[{value:"",label:"— Select Cock —"},...cocks.map(b=>({value:b.id,label:`${b.name} (${b.id})`}))]}/>
+        <Field label="Hen / Pullet" value={henId} onChange={setHenId} options={[{value:"",label:"— Select Hen —"},...hens.map(b=>({value:b.id,label:`${b.name} (${b.id})`}))]}/>
+      </div>
+      <InbreedingBanner result={result}/>
+      <p style={{fontSize:11,color:'#c4d9c4',marginTop:6}}>💡 Try: Rex + Pearl (half siblings), Rex + Opal (parent-offspring)</p>
+    </Card>
+    <Card>
+      <Lbl>Breeding Birds</Lbl>
+      <div style={{display:'flex',flexDirection:'column',gap:4}}>
+        {birds.map(b=><div key={b.id} className="animal-row" onClick={()=>setSel(b)}>
+          <div style={{width:34,height:34,borderRadius:8,background:'#fffbeb',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{b.sex==="M"?"🐓":"🐔"}</div>
+          <div style={{flex:1}}><p style={{fontWeight:600,fontSize:13}}>{b.name}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{b.breed} · {b.weight}kg</p></div>
+          <Badge text={b.role} cls={b.sex==="M"?"bg-red-50 text-red-700":"bg-pink-50 text-pink-700"}/>
+          <span style={{fontSize:14,color:'#c4d9c4'}}>›</span>
+        </div>)}
+      </div>
+    </Card>
+  </div>;
+};
+
+const EggsTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Today's Eggs" value="718" icon="🥚" trend="+2% vs avg" trendDir="up"/>
+    <StatCard label="Lay Rate" value="84%" sub="Layer flocks" icon="📊"/>
+    <StatCard label="Hatching Eggs Set" value="142" icon="🐣"/>
+    <StatCard label="Cracks / Rejects" value="23" icon="❌" trendDir="down" trend="3% reject rate"/>
+  </div>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <div className="chart-hdr"><span className="chart-title">Egg Production — 7 Days</span></div>
+      <AreaChart data={EGG_WEEK} dataKey="v" color="#d97706" h={110} labelKey="day"/>
+    </Card>
+    <Card>
+      <Lbl>Hatch Records</Lbl>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{["Set Date","Hatch Date","Set","Hatched","Rate"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 0',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.04em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+        <tbody>
+          {[{s:"2025-01-20",h:"2025-02-10",set:120,hatch:98,rate:"82%"},{s:"2024-12-05",h:"2024-12-26",set:100,hatch:87,rate:"87%"}].map((r,i)=><tr key={i}>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>{r.s}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>{r.h}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}>{r.set}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5',fontWeight:600}}>{r.hatch}</td>
+            <td style={{padding:'8px 0',borderBottom:'1px solid #f5f9f5'}}><Badge text={r.rate} cls="bg-green-50 text-green-700"/></td>
+          </tr>)}
+        </tbody>
+      </table>
+    </Card>
+  </div>
+</div>;
+
+// ── CROPS MODULE ──────────────────────────────────────
+const CropsDashboard=({fields})=>{
+  const totalHa=fields.reduce((a,f)=>a+f.size,0);
+  const growing=fields.filter(f=>f.status==="Growing").length;
+  const estRev=HARVEST_RECORDS.reduce((a,h)=>a+h.revenue,0);
+  return<div style={{display:'flex',flexDirection:'column',gap:14}}>
+    <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+      <StatCard label="Total Area" value={`${totalHa}ha`} icon="🗺️" sub="5 fields"/>
+      <StatCard label="Growing" value={growing} icon="🌱" trend="On track" trendDir="up"/>
+      <StatCard label="Harvesting" value={fields.filter(f=>f.status==="Harvesting").length} icon="🚜"/>
+      <StatCard label="Season Revenue" value={`R${(estRev/1000).toFixed(0)}k`} icon="💰" trend="+12% vs last" trendDir="up"/>
+    </div>
+    <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Harvest Revenue (R)</span></div>
+        <BarChart data={[{m:"Oct",v:9600},{m:"Nov",v:35700},{m:"Dec",v:12000},{m:"Jan",v:8400},{m:"Feb",v:10200},{m:"Mar",v:6800}]} keys={["v"]} colors={["#166534"]} h={110} labelKey="m"/>
+      </Card>
+      <Card>
+        <div className="chart-hdr"><span className="chart-title">Field Status</span></div>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <DonutChart segments={[{value:growing,color:'#16a34a'},{value:fields.filter(f=>f.status==="Harvesting").length,color:'#d97706'},{value:fields.filter(f=>f.status==="Fallow").length,color:'#9ca3af'}]} size={80}/>
+          <div style={{fontSize:12,display:'flex',flexDirection:'column',gap:5}}>
+            {[{l:"Growing",c:'#16a34a',v:growing},{l:"Harvesting",c:'#d97706',v:fields.filter(f=>f.status==="Harvesting").length},{l:"Fallow",c:'#9ca3af',v:fields.filter(f=>f.status==="Fallow").length}].map(s=><div key={s.l} style={{display:'flex',alignItems:'center',gap:6}}>
+              <span style={{width:8,height:8,borderRadius:'50%',background:s.c,display:'inline-block',flexShrink:0}}/>
+              <span style={{color:'#6b8b6b'}}>{s.l}:</span><span style={{fontWeight:700}}>{s.v}</span>
+            </div>)}
+          </div>
+        </div>
+      </Card>
+    </div>
+    <Card>
+      <Lbl>Fields Overview</Lbl>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{["Field","Crop","Size","Est. Harvest","Status"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 8px',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.04em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+        <tbody>{fields.map(f=><tr key={f.id}>
+          <td style={{padding:'8px 8px',borderBottom:'1px solid #f5f9f5',fontWeight:600}}>{f.name}</td>
+          <td style={{padding:'8px 8px',borderBottom:'1px solid #f5f9f5',color:'#374151'}}>{f.crop==="--"?"—":f.crop}</td>
+          <td style={{padding:'8px 8px',borderBottom:'1px solid #f5f9f5'}}>{f.size}ha</td>
+          <td style={{padding:'8px 8px',borderBottom:'1px solid #f5f9f5',color:'#9ab49a'}}>{f.harvestEst==="--"?"—":f.harvestEst}</td>
+          <td style={{padding:'8px 8px',borderBottom:'1px solid #f5f9f5'}}><Badge text={f.status} cls={f.status==="Growing"?"bg-teal-50 text-teal-700":f.status==="Harvesting"?"bg-amber-50 text-amber-700":"bg-gray-100 text-gray-500"}/></td>
+        </tr>)}</tbody>
+      </table>
+    </Card>
+  </div>;
+};
+
+const FieldsTab=({fields,setFields})=>{
+  const[showAdd,setShowAdd]=useState(false);
+  const[name,setName]=useState("");const[crop,setCrop]=useState("Maize");const[size,setSize]=useState("");
+  const add=()=>{if(!name)return;setFields(p=>[...p,{id:`FLD${String(p.length+1).padStart(3,"0")}`,name,size:parseFloat(size)||0,sizeUnit:"ha",soil:"Unknown",crop,variety:"TBD",plantDate:"--",harvestEst:"--",status:"Fallow",irrigated:false}]);setName("");setSize("");setShowAdd(false);};
+  return<div style={{display:'flex',flexDirection:'column',gap:10}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <p style={{fontWeight:700,fontSize:14}}>Fields</p>
+      <Btn onClick={()=>setShowAdd(!showAdd)} size="sm">+ Add Field</Btn>
+    </div>
+    {showAdd&&<Card cls="" style={{border:'1.5px solid #b6e8c4',background:'#f0fdf4'}}>
+      <Lbl>Add Field</Lbl>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+        <Field label="Field Name" value={name} onChange={setName}/>
+        <Field label="Size (ha)" value={size} onChange={setSize} type="number"/>
+        <Field label="Crop" value={crop} onChange={setCrop} options={["Maize","Soybeans","Sunflower","Vegetables","Wheat","Other","--"]}/>
+      </div>
+      <div style={{display:'flex',gap:6}}><Btn onClick={add}>Add Field</Btn><Btn onClick={()=>setShowAdd(false)} variant="outline">Cancel</Btn></div>
+    </Card>}
+    <div style={{display:'flex',flexDirection:'column',gap:8}}>
+      {fields.map(f=><Card key={f.id}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+          <div><p style={{fontWeight:700,fontSize:14}}>{f.name}</p><p style={{fontSize:12,color:'#9ab49a'}}>{f.soil} · {f.size}ha{f.irrigated?" · 💧":""}</p></div>
+          <Badge text={f.status} cls={f.status==="Growing"?"bg-teal-50 text-teal-700":f.status==="Harvesting"?"bg-amber-50 text-amber-700":"bg-gray-100 text-gray-500"}/>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,fontSize:13}}>
+          <div><span style={{color:'#9ab49a'}}>Crop: </span><span style={{fontWeight:600}}>{f.crop==="--"?"—":f.crop}</span></div>
+          <div><span style={{color:'#9ab49a'}}>Variety: </span><span style={{fontWeight:600}}>{f.variety==="--"?"—":f.variety}</span></div>
+          {f.plantDate!=="--"&&<div><span style={{color:'#9ab49a'}}>Planted: </span><span>{f.plantDate}</span></div>}
+          {f.harvestEst!=="--"&&<div><span style={{color:'#9ab49a'}}>Est harvest: </span><span>{f.harvestEst}</span></div>}
+        </div>
+      </Card>)}
+    </div>
+  </div>;
+};
+
+const PlantingTab=({fields})=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <Card>
+    <Lbl>Planting Schedule</Lbl>
+    {fields.filter(f=>f.plantDate!=="--").map(f=><div key={f.id} style={{padding:'10px 0',borderBottom:'1px solid #f0f5f0'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+        <p style={{fontWeight:600,fontSize:13}}>{f.name}</p>
+        <Badge text={f.status} cls={f.status==="Growing"?"bg-teal-50 text-teal-700":"bg-amber-50 text-amber-700"}/>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:4,fontSize:12,color:'#6b8b6b'}}>
+        <span>🌱 {f.plantDate}</span><span>🌾 {f.crop}</span><span>🚜 {f.harvestEst}</span>
+      </div>
+    </div>)}
+  </Card>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Crop Rotation Plan</Lbl>
+      <div style={{fontSize:13,color:'#374151',display:'flex',flexDirection:'column',gap:6}}>
+        {[{f:"North Block",from:"Maize",to:"Soybeans",reason:"N-fixing"},{f:"South Block",from:"Soybeans",to:"Sunflower",reason:"Variety"},{f:"West Block",from:"Sunflower",to:"Maize",reason:"Rotation"}].map((r,i)=><div key={i} style={{display:'flex',alignItems:'center',gap:8,padding:'8px',borderRadius:8,background:'#f8faf8'}}>
+          <div style={{flex:1}}><p style={{fontWeight:600}}>{r.f}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{r.from} → {r.to} ({r.reason})</p></div>
+          <span style={{fontSize:16}}>🔄</span>
+        </div>)}
+      </div>
+    </Card>
+    <Card>
+      <div className="chart-hdr"><span className="chart-title">Growth Progress (%)</span></div>
+      <AreaChart data={[{m:"Nov",v:10},{m:"Dec",v:30},{m:"Jan",v:55},{m:"Feb",v:75},{m:"Mar",v:88},{m:"Apr",v:100}]} dataKey="v" color="#16a34a" h={110} labelKey="m"/>
+    </Card>
+  </div>
+</div>;
+
+const HarvestTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Season Revenue" value="R76k" icon="💰" trend="+18% vs last" trendDir="up"/>
+    <StatCard label="Total Yield" value="14.6t" icon="🚜"/>
+    <StatCard label="Best Crop" value="Tomatoes" sub="R35.7k" icon="🥇"/>
+    <StatCard label="Avg Price/kg" value="R6.50" icon="📊"/>
+  </div>
+  <Card>
+    <Lbl>Harvest Records</Lbl>
+    <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+      <thead><tr>{["Crop","Date","Quantity","Price/kg","Revenue"].map(h=><th key={h} style={{textAlign:'left',padding:'6px 8px',fontSize:11,fontWeight:700,color:'#9ab49a',textTransform:'uppercase',letterSpacing:'0.04em',borderBottom:'1px solid #e8ede8'}}>{h}</th>)}</tr></thead>
+      <tbody>{HARVEST_RECORDS.map(h=><tr key={h.id}>
+        <td style={{padding:'9px 8px',borderBottom:'1px solid #f5f9f5',fontWeight:600}}>{h.crop}</td>
+        <td style={{padding:'9px 8px',borderBottom:'1px solid #f5f9f5',color:'#9ab49a'}}>{h.date}</td>
+        <td style={{padding:'9px 8px',borderBottom:'1px solid #f5f9f5'}}>{h.qty.toLocaleString()} {h.unit}</td>
+        <td style={{padding:'9px 8px',borderBottom:'1px solid #f5f9f5'}}>R{h.price}</td>
+        <td style={{padding:'9px 8px',borderBottom:'1px solid #f5f9f5',fontWeight:700,color:'#166534'}}>R{h.revenue.toLocaleString()}</td>
+      </tr>)}</tbody>
+    </table>
+  </Card>
+  <Card>
+    <div className="chart-hdr"><span className="chart-title">Monthly Harvest Revenue (R)</span></div>
+    <BarChart data={[{m:"Oct",v:9600},{m:"Nov",v:35700},{m:"Dec",v:12000},{m:"Jan",v:8400},{m:"Feb",v:10200},{m:"Mar",v:6800}]} keys={["v"]} colors={["#166534"]} h={105} labelKey="m"/>
+  </Card>
+</div>;
+
+const InputsTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Fertilizer Applications</Lbl>
+      {[{field:"North Block",product:"LAN 28%",rate:"200kg/ha",date:"2025-11-10",cost:"R8,400"},{field:"South Block",product:"2:3:2(22)",rate:"150kg/ha",date:"2025-11-22",cost:"R4,200"},{field:"West Block",product:"Superphosphate",rate:"100kg/ha",date:"2025-12-05",cost:"R3,750"}].map((a,i)=><div key={i} style={{padding:'9px 0',borderBottom:'1px solid #f0f5f0',fontSize:13}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}><span style={{fontWeight:600}}>{a.field} — {a.product}</span><span style={{fontWeight:700,color:'#166534'}}>{a.cost}</span></div>
+        <div style={{display:'flex',gap:12,fontSize:11.5,color:'#9ab49a'}}><span>{a.rate}</span><span>{a.date}</span></div>
+      </div>)}
+    </Card>
+    <Card>
+      <Lbl>Chemical Spray Records</Lbl>
+      {[{field:"North Block",product:"Roundup",purpose:"Pre-emergence herbicide",date:"2025-11-04"},{field:"River Field",product:"Lambda-Cyhalothrin",purpose:"Pest control",date:"2026-01-25"},{field:"West Block",product:"Mancozeb",purpose:"Fungal prevention",date:"2026-02-10"}].map((s,i)=><div key={i} style={{padding:'9px 0',borderBottom:'1px solid #f0f5f0',fontSize:13}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}><span style={{fontWeight:600}}>{s.field} — {s.product}</span><span style={{fontSize:11.5,color:'#9ab49a'}}>{s.date}</span></div>
+        <p style={{fontSize:11.5,color:'#9ab49a'}}>{s.purpose}</p>
+      </div>)}
+    </Card>
+  </div>
+</div>;
+
+// ── SHARED TABS ───────────────────────────────────────
+const HealthTab=({type})=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Healthy" value={type==="pigs"?"9":type==="chickens"?"94%":"6"} icon="✅" trendDir="up"/>
+    <StatCard label="Under Treatment" value={type==="pigs"?"1":type==="chickens"?"12":"1"} icon="💊" trendDir="down"/>
+    <StatCard label="Vaccinations Due" value="2" icon="💉" trend="This week" trendDir="up"/>
+    <StatCard label="Last Health Check" value="3d ago" icon="🩺"/>
+  </div>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Upcoming Vaccinations</Lbl>
+      {(type==="pigs"?[{n:"PRRS Vaccine",d:"2026-03-20",a:"All sows"},{n:"Parvovirus",d:"2026-04-05",a:"Gilts"}]:type==="chickens"?[{n:"Newcastle Disease",d:"2026-03-17",a:"Broiler Batch 7"},{n:"Marek's Disease",d:"2026-03-25",a:"Pullets"}]:type==="crops"?[{n:"Fungicide Spray",d:"2026-03-18",a:"North Block"},{n:"Insecticide",d:"2026-03-22",a:"River Field"}]:[{n:"Foot & Mouth",d:"2026-03-18",a:"All cattle"},{n:"Lumpy Skin",d:"2026-04-01",a:"Full herd"}]).map((v,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px',borderRadius:9,background:'#fffbeb',border:'1px solid #fde68a',marginBottom:6}}>
+        <div><p style={{fontWeight:600,fontSize:13}}>{v.n}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{v.a}</p></div>
+        <span style={{fontSize:12,fontWeight:600,color:'#b45309'}}>Due {v.d}</span>
+      </div>)}
+    </Card>
+    <Card>
+      <Lbl>Recent Health Events</Lbl>
+      {[{animal:"General",event:"Routine checkup",date:"2026-03-08",ok:true},{animal:"1 animal",event:"Respiratory treatment",date:"2026-02-25",ok:false},{animal:"General",event:"Deworming programme",date:"2026-02-10",ok:true}].map((h,i)=><div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid #f0f5f0',fontSize:13}}>
+        <div><p style={{fontWeight:600}}>{h.animal}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{h.event}</p></div>
+        <div style={{textAlign:'right'}}><span style={{fontSize:11.5,color:'#9ab49a'}}>{h.date}</span><br/><Badge text={h.ok?"Clear":"Ongoing"} cls={h.ok?"bg-green-50 text-green-700":"bg-red-50 text-red-700"}/></div>
+      </div>)}
+    </Card>
+  </div>
+</div>;
+
+const ReportsTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    {[{icon:"📊",title:"Monthly Summary",desc:"Full performance overview for the current month",spark:[{v:85},{v:88},{v:82},{v:91},{v:89},{v:87}]},{icon:"📈",title:"Trend Analysis",desc:"6-month production and health trends",spark:[{v:70},{v:74},{v:78},{v:80},{v:84},{v:87}]},{icon:"🏆",title:"Performance Report",desc:"Animal and field KPI benchmarking",spark:[{v:90},{v:88},{v:92},{v:91},{v:94},{v:93}]},{icon:"💰",title:"Financial Summary",desc:"Revenue, expenses and profitability",spark:[{v:60},{v:65},{v:63},{v:68},{v:66},{v:70}]}].map((r,i)=><Card key={i} cls="card-hover" style={{cursor:'pointer'}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}}>
+        <div style={{display:'flex',gap:10,alignItems:'center'}}>
+          <span style={{fontSize:22}}>{r.icon}</span>
+          <div><p style={{fontWeight:700,fontSize:14}}>{r.title}</p><p style={{fontSize:12,color:'#9ab49a',marginTop:2}}>{r.desc}</p></div>
+        </div>
+        <Spark data={r.spark} dataKey="v" color="#166534"/>
+      </div>
+      <div style={{marginTop:10,display:'flex',gap:6}}>
+        <Btn size="sm" variant="outline">View</Btn>
+        <Btn size="sm" variant="ghost">Export PDF</Btn>
+      </div>
+    </Card>)}
+  </div>
+</div>;
+
+const WeatherTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <Card cls="" style={{background:'linear-gradient(135deg,#052e16,#166534)',border:'none',color:'#fff',textAlign:'center',padding:24}}>
+    <p style={{fontSize:52,lineHeight:1,marginBottom:6}}>☀️</p>
+    <p style={{fontSize:36,fontWeight:800,letterSpacing:'-0.03em'}}>24°C</p>
+    <p style={{fontSize:13,opacity:0.7,marginTop:4}}>Green Meadows Farm</p>
+    <p style={{fontSize:14,fontWeight:600,marginTop:6}}>Sunny · Humidity 62% · Wind 12 km/h S</p>
+  </Card>
+  <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:8}}>
+    {WEATHER.map((w,i)=><Card key={i} cls="" style={{textAlign:'center',padding:10}}>
+      <p style={{fontSize:11,fontWeight:600,color:'#9ab49a'}}>{w.day}</p>
+      <p style={{fontSize:22,margin:'6px 0'}}>{w.icon}</p>
+      <p style={{fontWeight:800,fontSize:14}}>{w.high}°</p>
+      <p style={{fontSize:11,color:'#9ab49a'}}>{w.low}°</p>
+    </Card>)}
+  </div>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <Lbl>Farm Weather Alerts</Lbl>
+      {[{icon:"🌧️",text:"Rain Wednesday — suspend spraying & field ops",c:"#eff6ff"},{icon:"☀️",text:"Heat stress risk Friday — check livestock water",c:"#fff7ed"},{icon:"💨",text:"Strong winds Saturday — secure polytunnels",c:"#f5f3ff"}].map((a,i)=><div key={i} style={{display:'flex',gap:8,padding:'8px 10px',borderRadius:8,background:a.c,marginBottom:5,fontSize:13,alignItems:'flex-start'}}>
+        <span style={{flexShrink:0}}>{a.icon}</span><span style={{color:'#374151'}}>{a.text}</span>
+      </div>)}
+    </Card>
+    <Card>
+      <div className="chart-hdr"><span className="chart-title">Temperature Forecast (°C)</span></div>
+      <AreaChart data={WEATHER} dataKey="high" color="#f97316" h={100} labelKey="day"/>
+    </Card>
+  </div>
+</div>;
+
+const DocumentsTab=()=>{
+  const docs=[{name:"Farm Registration Certificate",type:"Legal",date:"2024-01-15",icon:"📜"},{name:"Veterinary Health Certificate",type:"Health",date:"2024-03-01",icon:"💊"},{name:"Water Use Licence",type:"Compliance",date:"2023-11-20",icon:"💧"},{name:"Slaughter Permit",type:"Operations",date:"2024-06-01",icon:"📋"},{name:"Insurance Policy",type:"Finance",date:"2024-01-01",icon:"🛡️"},{name:"Soil Analysis Report",type:"Technical",date:"2024-02-20",icon:"🧪"}];
+  return<div style={{display:'flex',flexDirection:'column',gap:8}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
+      <p style={{fontWeight:700,fontSize:14}}>Documents</p>
+      <Btn size="sm" variant="outline">+ Upload</Btn>
+    </div>
+    {docs.map((d,i)=><Card key={i} cls="card-hover">
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <span style={{fontSize:22,flexShrink:0}}>{d.icon}</span>
+        <div style={{flex:1}}><p style={{fontWeight:600,fontSize:13}}>{d.name}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{d.type} · Updated {d.date}</p></div>
+        <div style={{display:'flex',gap:6}}>
+          <Btn size="sm" variant="outline">View</Btn>
+        </div>
+      </div>
+    </Card>)}
+  </div>;
+};
+
+const FinanceTab=()=><div style={{display:'flex',flexDirection:'column',gap:12}}>
+  <div className="lg-grid-4" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+    <StatCard label="Monthly Revenue" value="R68.4k" icon="📈" trend="+4%" trendDir="up" spark={FINANCE_MONTHS} sparkKey="rev" color="#166534"/>
+    <StatCard label="Monthly Expenses" value="R42.2k" icon="📉" trendDir="down" spark={FINANCE_MONTHS} sparkKey="exp" color="#dc2626"/>
+    <StatCard label="Net Profit" value="R26.2k" icon="💰" trend="+8% vs last month" trendDir="up"/>
+    <StatCard label="Profit Margin" value="38%" sub="6-month avg: 35%" icon="🎯" trend="+3%" trendDir="up"/>
+  </div>
+  <div className="lg-grid-2" style={{display:'flex',flexDirection:'column',gap:12}}>
+    <Card>
+      <div className="chart-hdr"><span className="chart-title">Revenue vs Expenses (R)</span></div>
+      <BarChart data={FINANCE_MONTHS} keys={["rev","exp"]} colors={["#166534","#ef4444"]} h={120} labelKey="m"/>
+      <div style={{display:'flex',gap:16,marginTop:8,fontSize:11,color:'#9ab49a'}}>
+        <span><span style={{display:'inline-block',width:10,height:3,background:'#166534',borderRadius:2,verticalAlign:'middle',marginRight:4}}/>Revenue</span>
+        <span><span style={{display:'inline-block',width:10,height:3,background:'#ef4444',borderRadius:2,verticalAlign:'middle',marginRight:4}}/>Expenses</span>
+      </div>
+    </Card>
+    <Card>
+      <div className="chart-hdr"><span className="chart-title">Net Profit Trend (R)</span></div>
+      <AreaChart data={FINANCE_MONTHS.map(m=>({...m,profit:m.rev-m.exp}))} dataKey="profit" color="#166534" h={120} labelKey="m"/>
+    </Card>
+  </div>
+  <Card>
+    <Lbl>Expense Breakdown</Lbl>
+    <div style={{display:'flex',alignItems:'center',gap:20}}>
+      <DonutChart segments={[{value:14000,color:'#166534'},{value:9000,color:'#f97316'},{value:7200,color:'#8b5cf6'},{value:6000,color:'#0ea5e9'},{value:6000,color:'#ec4899'}]} size={88}/>
+      <div style={{fontSize:12,display:'flex',flexDirection:'column',gap:5,flex:1}}>
+        {[{l:"Feed & Fodder",v:"R14,000",c:'#166534'},{l:"Labour",v:"R9,000",c:'#f97316'},{l:"Veterinary",v:"R7,200",c:'#8b5cf6'},{l:"Fuel & Energy",v:"R6,000",c:'#0ea5e9'},{l:"Other",v:"R6,000",c:'#ec4899'}].map(s=><div key={s.l} style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}><span style={{width:8,height:8,borderRadius:'50%',background:s.c,display:'inline-block',flexShrink:0}}/><span style={{color:'#6b8b6b'}}>{s.l}</span></div>
+          <span style={{fontWeight:700}}>{s.v}</span>
+        </div>)}
+      </div>
+    </div>
+  </Card>
+</div>;
+
+const AdminTab=({user})=>{
+  const[showInvite,setShowInvite]=useState(false);
+  const[email,setEmail]=useState("");const[role,setRole]=useState("manager");
+  const[toast,setToast]=useState("");
+  const[users,setUsers]=useState([
+    {id:1,name:"Jane Smith",email:"jane@farm.co.za",role:"superuser",status:"Active"},
+    {id:2,name:"John Doe",email:"john@farm.co.za",role:"manager",status:"Active"},
+    {id:3,name:"Sam Nkosi",email:"sam@farm.co.za",role:"worker",status:"Active"},
+  ]);
+  const invite=()=>{
+    if(!email)return;
+    setUsers(p=>[...p,{id:p.length+1,name:email.split("@")[0],email,role,status:"Invited"}]);
+    setToast(`Invite sent to ${email}`);setEmail("");setShowInvite(false);
+    setTimeout(()=>setToast(""),3000);
+  };
+  return<div style={{display:'flex',flexDirection:'column',gap:12}}>
+    {toast&&<div style={{position:'fixed',top:16,right:16,zIndex:60,background:'#166534',color:'#fff',padding:'10px 16px',borderRadius:10,fontSize:13,fontWeight:600,boxShadow:'0 4px 20px rgba(0,0,0,0.15)'}}>{toast}</div>}
+    <Modal open={showInvite} onClose={()=>setShowInvite(false)} title="Invite Team Member">
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <Field label="Email Address" value={email} onChange={setEmail} type="email"/>
+        <Field label="Role" value={role} onChange={setRole} options={[{value:"manager",label:"Farm Manager"},{value:"worker",label:"Farm Worker"},{value:"vet",label:"Veterinarian"}]}/>
+        <p style={{fontSize:12,color:'#9ab49a'}}>They'll receive an email to set up their account and join your farm.</p>
+        <Btn onClick={invite} cls="w-full" style={{justifyContent:'center'}}>Send Invite 📧</Btn>
+      </div>
+    </Modal>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+      <div><p style={{fontWeight:700,fontSize:14}}>Team Management</p><p style={{fontSize:12,color:'#9ab49a'}}>{users.length} members</p></div>
+      <Btn onClick={()=>setShowInvite(true)} size="sm">+ Invite User</Btn>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+      {users.map(u=><Card key={u.id}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:36,height:36,borderRadius:'50%',background:'#166534',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:14,flexShrink:0}}>{u.name[0]}</div>
+          <div style={{flex:1}}><p style={{fontWeight:600,fontSize:13}}>{u.name}</p><p style={{fontSize:11.5,color:'#9ab49a'}}>{u.email}</p></div>
+          <Badge text={u.role} cls="bg-green-50 text-green-700"/>
+          <Badge text={u.status} cls={u.status==="Active"?"bg-emerald-50 text-emerald-700":"bg-amber-50 text-amber-700"}/>
+        </div>
+      </Card>)}
+    </div>
+    <Card>
+      <Lbl>Farm Settings</Lbl>
+      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+        <Field label="Farm Name" value="Green Meadows Farm" onChange={()=>{}}/>
+        <Field label="Location" value="Mpumalanga, South Africa" onChange={()=>{}}/>
+        <Field label="Farming Type" value="dairy" onChange={()=>{}} options={FARMING_TYPES.map(f=>({value:f.id,label:f.label}))}/>
+        <Btn variant="outline">Save Changes</Btn>
+      </div>
+    </Card>
+  </div>;
+};
+
+// ── MAIN APP ──────────────────────────────────────────
+const MainApp=({user,farmType,farmName})=>{
+  const cfg=NAV_CONFIG[farmType]||NAV_CONFIG.dairy;
+  const[tab,setTab]=useState("dashboard");
+  const[cows,setCows]=useState(SEED_COWS);
+  const[pigs,setPigs]=useState(SEED_PIGS);
+  const[flocks,setFlocks]=useState(SEED_FLOCKS);
+  const[birds,setBirds]=useState(SEED_BIRDS);
+  const[fields,setFields]=useState(SEED_FIELDS);
+  const[selCow,setSelCow]=useState(null);
+  const[selPig,setSelPig]=useState(null);
+  const[moreOpen,setMoreOpen]=useState(false);
+  const bottomIds=cfg.bottom;
+  const bottomTabs=cfg.tabs.filter(t=>bottomIds.includes(t.id));
+  const moreTabs=cfg.tabs.filter(t=>!bottomIds.includes(t.id));
+  const nav=(id)=>{setTab(id);setSelCow(null);setSelPig(null);setMoreOpen(false);};
+  const tabLabel=cfg.tabs.find(t=>t.id===tab)?.label||(tab==="admin"?"Admin":"");
+
+  const content=()=>{
+    if(selCow&&tab==="herd")return<CowDetail cow={selCow} allCows={cows} onBack={()=>setSelCow(null)} onSelect={c=>setSelCow(c)}/>;
+    if(selPig&&tab==="pigs")return<PigDetail pig={selPig} allPigs={pigs} onBack={()=>setSelPig(null)} onSelect={p=>setSelPig(p)}/>;
+    if(farmType==="dairy"){
+      if(tab==="dashboard")return<DairyDashboard cows={cows}/>;
+      if(tab==="herd")return<HerdTab cows={cows} setCows={setCows} onSelect={c=>{setSelCow(c);}}/>;
+      if(tab==="breeding")return<BreedingTabDairy cows={cows}/>;
+      if(tab==="dairy")return<DairyOpsTab/>;
+    }
+    if(farmType==="pigs"){
+      if(tab==="dashboard")return<PigDashboard pigs={pigs}/>;
+      if(tab==="pigs")return<PigsTab pigs={pigs} setPigs={setPigs} onSelect={p=>{setSelPig(p);}}/>;
+      if(tab==="breeding")return<BreedingTabPigs pigs={pigs}/>;
+      if(tab==="production")return<ProductionTabPigs pigs={pigs}/>;
+    }
+    if(farmType==="chickens"){
+      if(tab==="dashboard")return<ChickenDashboard flocks={flocks} birds={birds}/>;
+      if(tab==="flocks")return<FlocksTab flocks={flocks} setFlocks={setFlocks}/>;
+      if(tab==="breeders")return<BreedersTab birds={birds}/>;
+      if(tab==="eggs")return<EggsTab/>;
+    }
+    if(farmType==="crops"){
+      if(tab==="dashboard")return<CropsDashboard fields={fields}/>;
+      if(tab==="fields")return<FieldsTab fields={fields} setFields={setFields}/>;
+      if(tab==="planting")return<PlantingTab fields={fields}/>;
+      if(tab==="harvest")return<HarvestTab/>;
+      if(tab==="inputs")return<InputsTab/>;
+    }
+    if(tab==="health")return<HealthTab type={farmType}/>;
+    if(tab==="reports")return<ReportsTab/>;
+    if(tab==="weather")return<WeatherTab/>;
+    if(tab==="documents")return<DocumentsTab/>;
+    if(tab==="finance")return<FinanceTab/>;
+    if(tab==="admin")return<AdminTab user={user}/>;
+    return<div style={{textAlign:'center',padding:40,color:'#9ab49a'}}>Select a tab to get started</div>;
+  };
+
+  return<div className="main-wrap">
+    {/* ── SIDEBAR (desktop) */}
+    <nav className="sidebar">
+      <div style={{padding:'18px 16px 14px',borderBottom:'1px solid #f0f5f0'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+          <span style={{fontSize:22}}>🌾</span>
+          <span style={{fontWeight:800,fontSize:16,letterSpacing:'-0.02em',color:'#0f1f0f'}}>FarmFlow</span>
+        </div>
+        <p style={{fontSize:12,color:'#9ab49a',marginBottom:6}}>{farmName||"My Farm"}</p>
+        <span style={{fontSize:11,fontWeight:600,padding:'2px 8px',borderRadius:6,background:'#f0fdf4',color:'#166534',border:'1px solid #b6e8c4'}}>{farmType}</span>
+      </div>
+      <div style={{flex:1,padding:'10px 8px',overflowY:'auto'}}>
+        {cfg.tabs.map(t=><button key={t.id} className={`nav-item ${tab===t.id?"active":""}`} onClick={()=>nav(t.id)}>
+          <span className="nav-icon">{t.icon}</span><span>{t.label}</span>
+        </button>)}
+        {user?.role==="superuser"&&<>
+          <div style={{height:1,background:'#f0f5f0',margin:'8px 4px'}}/>
+          <button className={`nav-item ${tab==="admin"?"active":""}`} onClick={()=>nav("admin")}>
+            <span className="nav-icon">⚙</span><span>Admin</span>
+          </button>
+        </>}
+      </div>
+      <div style={{padding:'12px 14px',borderTop:'1px solid #f0f5f0',display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:30,height:30,borderRadius:'50%',background:'#166534',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13,flexShrink:0}}>{user?.email?.[0]?.toUpperCase()||"U"}</div>
+        <div style={{flex:1,minWidth:0}}><p style={{fontSize:12,fontWeight:600,color:'#0f1f0f',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{user?.email||"User"}</p><p style={{fontSize:11,color:'#9ab49a'}}>{user?.role}</p></div>
+      </div>
+    </nav>
+
+    {/* ── CONTENT */}
+    <div>
+      <div className="topbar">
+        <div>
+          <h1 style={{fontWeight:700,fontSize:15,letterSpacing:'-0.01em',color:'#0f1f0f'}}>{tabLabel}</h1>
+          <p style={{fontSize:11,color:'#9ab49a'}}>{farmName||"My Farm"}</p>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <button style={{width:32,height:32,borderRadius:'50%',background:'#f5faf5',border:'1px solid #e8ede8',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative',fontSize:15}}>
+            🔔<span style={{position:'absolute',top:4,right:4,width:7,height:7,background:'#dc2626',borderRadius:'50%',border:'1.5px solid #fff'}}/>
+          </button>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'#166534',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:13}}>{user?.email?.[0]?.toUpperCase()||"U"}</div>
+        </div>
+      </div>
+      <div style={{padding:'18px 18px 96px'}}>{content()}</div>
+    </div>
+
+    {/* ── BOTTOM NAV (mobile) */}
+    <div className="bottom-nav">
+      {bottomTabs.map(t=><button key={t.id} className={`bnav-item ${tab===t.id?"active":""}`} onClick={()=>nav(t.id)}>
+        <span className="bnav-icon">{t.icon}</span><span>{t.label}</span>
+      </button>)}
+      <div style={{position:'relative',flex:1}}>
+        <button className={`bnav-item ${moreOpen?"active":""}`} style={{width:'100%'}} onClick={()=>setMoreOpen(!moreOpen)}>
+          <span className="bnav-icon">⋯</span><span>More</span>
+        </button>
+        {moreOpen&&<div style={{position:'absolute',bottom:'calc(100% + 4px)',right:0,width:180,background:'#fff',borderRadius:12,boxShadow:'0 8px 32px rgba(0,0,0,0.14)',border:'1px solid #e8ede8',overflow:'hidden',zIndex:50}}>
+          {moreTabs.map(t=><button key={t.id} onClick={()=>nav(t.id)} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'10px 14px',fontSize:13,fontWeight:500,background:'none',border:'none',cursor:'pointer',color:'#374151',fontFamily:'Inter,system-ui,sans-serif',textAlign:'left'}}>
+            <span style={{fontSize:15}}>{t.icon}</span><span>{t.label}</span>
+          </button>)}
+          {user?.role==="superuser"&&<button onClick={()=>nav("admin")} style={{width:'100%',display:'flex',alignItems:'center',gap:8,padding:'10px 14px',fontSize:13,fontWeight:500,background:'none',border:'none',borderTop:'1px solid #f0f5f0',cursor:'pointer',color:'#374151',fontFamily:'Inter,system-ui,sans-serif',textAlign:'left'}}>
+            <span style={{fontSize:15}}>⚙</span><span>Admin</span>
+          </button>}
+        </div>}
+      </div>
+    </div>
+  </div>;
+};
+
+// ── ROOT ──────────────────────────────────────────────
+const App=()=>{
+  const[screen,setScreen]=useState("login");
+  const[user,setUser]=useState(null);
+  const[farmType,setFarmType]=useState("dairy");
+  const[farmName,setFarmName]=useState("Green Meadows Farm");
+  if(screen==="login")return<LoginScreen onLogin={u=>{setUser(u);setScreen("onboarding");}}/>;
+  if(screen==="onboarding")return<OnboardingWizard onComplete={({farmType:ft,farmName:fn})=>{setFarmType(ft||"dairy");setFarmName(fn||"My Farm");setScreen("app");}}/>;
+  return<MainApp user={user} farmType={farmType} farmName={farmName}/>;
+};
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
