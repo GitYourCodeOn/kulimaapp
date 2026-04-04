@@ -2,10 +2,19 @@ import { betterAuth } from "better-auth"
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
 import { db } from "@/lib/db"
 import { sendEmail } from "@/lib/email"
+import * as schema from "@/lib/db/schema"
 
 export const auth = betterAuth({
   baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  database: drizzleAdapter(db, { provider: "pg" }),
+  database: drizzleAdapter(db, {
+    provider: "pg",
+    schema: {
+      user: schema.authUser,
+      session: schema.authSession,
+      account: schema.authAccount,
+      verification: schema.authVerification,
+    },
+  }),
   emailAndPassword: { enabled: true },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
