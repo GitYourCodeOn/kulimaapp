@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { signIn } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -104,15 +103,6 @@ function LoginForm() {
               {loading ? "Signing in..." : "Sign in"}
             </Button>
 
-            <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link
-                href="/register"
-                className="font-medium text-[#166534] hover:underline"
-              >
-                Create one
-              </Link>
-            </p>
           </form>
         </CardContent>
       </Card>
