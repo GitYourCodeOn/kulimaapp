@@ -1,16 +1,115 @@
-## File conventions
-- All new components go in /components/[module]/
-- Server Actions go in /app/(app)/[route]/actions.ts
+You are building FarmFlow — a multi-tenant Farm Management SaaS web application.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+UI DESIGN SYSTEM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Aesthetic: Apple-like minimal — generous whitespace, large type, subtle depth.
+
+### Component Library
+
+Always use shadcn/ui components from `@/components/ui/*`.
+Never build custom inputs, buttons, dialogs, selects, tables, or modals from scratch.
+
+This project uses **shadcn v2 with @base-ui/react** (NOT Radix).
+- Triggers use `render` prop instead of `asChild`:
+  ```tsx
+  <DialogTrigger render={<Button size="sm" />}>Open</DialogTrigger>
+  <AlertDialogTrigger render={<Button variant="destructive" />}>Delete</AlertDialogTrigger>
+  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>...</DropdownMenuTrigger>
+  ```
+- AlertDialogAction is a Button wrapper — pass props directly, no `asChild`.
+- AlertDialogCancel/DialogClose use `render={<Button variant="outline" />}`.
+
+### Typography Scale
+
+- Page titles:        `text-2xl font-bold tracking-tight`
+- Section headings:   `text-lg font-semibold`
+- Card titles:        `text-base font-medium`
+- Body text:          `text-sm`
+- Captions / hints:   `text-xs text-muted-foreground`
+- Use `font-heading` for titles when available.
+
+### Spacing & Layout
+
+- Page max-width:     `max-w-4xl mx-auto` (centred content column)
+- Page padding:       `px-4 py-6 sm:px-6` (mobile-first, wider on sm+)
+- Section gaps:       `space-y-6` between cards/sections
+- Card internal:      `space-y-4` within card content
+- Form field gaps:    `space-y-2` (label + input), `gap-4` between grid fields
+- Grid layouts:       `grid gap-4 sm:grid-cols-2 lg:grid-cols-3`
+
+Padding scale (consistent across all pages):
+  4 → tight (badges, pills)
+  6 → compact (table cells, list items)
+  8 → default (form fields, card padding via shadcn defaults)
+  12-16 → spacious (page sections, hero areas)
+
+### Shadows & Borders
+
+- Cards:              Use shadcn `<Card>` (built-in ring/border). No extra shadow at rest.
+- Hover elevation:    `hover:shadow-md transition-shadow` on interactive cards only.
+- Danger borders:     `border-destructive/40` for danger zone cards.
+- Dividers:           Use `<Separator />` from shadcn, never raw `<hr>` or border hacks.
+- Status badges:      Custom colours via className overrides on `<Badge variant="outline">`:
+                        Active  → `border-green-200 bg-green-50 text-green-700`
+                        Invited → `border-amber-200 bg-amber-50 text-amber-700`
+                        Error   → `border-red-200 bg-red-50 text-red-700`
+
+### Colour Tokens
+
+- Brand green:        `#166534` (text-[#166534], bg-[#166534])
+- Page background:    `bg-[#f7f9f7]`
+- Text primary:       `text-[#0f1f0f]`
+- Text secondary:     `text-muted-foreground` (shadcn token)
+- Header border:      `border-[#e8ede8]`
+- Header bg:          `bg-white/90 backdrop-blur-sm`
+
+### Mobile-First Responsive
+
+Every page and component must be mobile-friendly:
+- Stack vertically on mobile, grid on `sm:` / `lg:` breakpoints.
+- Tables hidden on mobile (`hidden sm:block`), replaced with card lists (`sm:hidden`).
+- Touch targets minimum 44px (use `size="sm"` buttons, not icon-only without tooltip).
+- Dialogs: `sm:max-w-md` to stay usable on small screens.
+- Bottom padding on mobile pages for thumb reach.
+
+### Toasts & Feedback
+
+- Use `toast` from `sonner` (already wired via `<Toaster>` in root layout).
+- `toast.success()` for confirmations, `toast.error()` for failures.
+- Never use `alert()` or `window.confirm()`.
+
+### Header Pattern
+
+All `(app)` pages share this sticky header:
+```tsx
+<header className="sticky top-0 z-30 flex items-center justify-between border-b border-[#e8ede8] bg-white/90 px-4 py-3 backdrop-blur-sm sm:px-6">
+```
+
+### Empty States
+
+Use centred text with muted colour for pages with no data yet:
+```tsx
+<div className="flex flex-col items-center justify-center py-16 text-center">
+  <p className="text-sm text-muted-foreground">No records yet</p>
+</div>
+```
+
+### File Conventions
+
+- All new components go in `/components/[module]/`
+- Server Actions go in `/app/(app)/[route]/actions.ts`
 - Never use `any` type — always define proper TypeScript interfaces
 - Drizzle queries always include a `.where(eq(table.farmId, farmId))` guard
 - Run `drizzle-kit push` after any schema change, never edit migrations manually
 
-## Before writing code
-- Check if the component already exists in farmflow-v2.html
-- Check if the type already exists in lib/db/schema.ts
-- Do not install new packages without confirming first
+### Before Writing Code
 
-You are building FarmFlow — a multi-tenant Farm Management SaaS web application.
+- Check if the component already exists in `farmflow-v2.html`
+- Check if the type already exists in `lib/db/schema.ts`
+- Do not install new packages without confirming first
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WIREFRAME REFERENCE
