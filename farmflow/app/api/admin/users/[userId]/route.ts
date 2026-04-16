@@ -1,45 +1,46 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireSuperuser } from "@/lib/admin"
+import { requireManager } from "@/lib/tenant"
 import { db } from "@/lib/db"
 import { users } from "@/lib/db/schema"
 import { eq, and } from "drizzle-orm"
+import { userPatchSchema } from "@/lib/validation"
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { appUser } = await requireSuperuser()
+    const tenant = await requireManager()
     const { userId } = await params
-    const body = await req.json()
+    const parsed = userPatchSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        { status: 400 }
+      )
+    }
 
     const [target] = await db
       .select()
       .from(users)
-      .where(and(eq(users.id, userId), eq(users.farmId, appUser.farmId!)))
+      .where(and(eq(users.id, userId), eq(users.farmId, tenant.farmId)))
       .limit(1)
 
     if (!target) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    if (target.role === "superuser" && target.id !== appUser.id) {
+    if (target.role === "manager") {
       return NextResponse.json(
-        { error: "Cannot modify another superuser" },
+        { error: "Cannot modify a manager" },
         { status: 403 }
       )
     }
 
-    const updates: Record<string, unknown> = {}
-    if (body.role && ["manager", "worker"].includes(body.role)) {
-      updates.role = body.role
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json({ error: "Nothing to update" }, { status: 400 })
-    }
-
-    await db.update(users).set(updates).where(eq(users.id, userId))
+    await db
+      .update(users)
+      .set({ role: parsed.data.role })
+      .where(eq(users.id, userId))
 
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
@@ -55,12 +56,12 @@ export async function DELETE(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
-    const { appUser } = await requireSuperuser()
+    const tenant = await requireManager()
     const { userId } = await params
 
-    if (userId === appUser.id) {
+    if (userId === tenant.userId) {
       return NextResponse.json(
-        { error: "Cannot deactivate yourself" },
+        { error: "Cannot remove yourself" },
         { status: 400 }
       )
     }
@@ -68,16 +69,16 @@ export async function DELETE(
     const [target] = await db
       .select()
       .from(users)
-      .where(and(eq(users.id, userId), eq(users.farmId, appUser.farmId!)))
+      .where(and(eq(users.id, userId), eq(users.farmId, tenant.farmId)))
       .limit(1)
 
     if (!target) {
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
 
-    if (target.role === "superuser") {
+    if (target.role === "manager") {
       return NextResponse.json(
-        { error: "Cannot deactivate a superuser" },
+        { error: "Cannot remove a manager — only superadmins can" },
         { status: 403 }
       )
     }

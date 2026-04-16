@@ -46,13 +46,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -60,7 +53,7 @@ interface AppUser {
   id: string
   email: string
   name: string
-  role: "superuser" | "manager" | "worker"
+  role: "manager" | "worker"
   farmId: string | null
   createdAt: string
 }
@@ -83,10 +76,8 @@ interface Props {
 
 const roleBadgeVariant = (role: string) => {
   switch (role) {
-    case "superuser":
-      return "default" as const
     case "manager":
-      return "secondary" as const
+      return "default" as const
     default:
       return "outline" as const
   }
@@ -95,31 +86,12 @@ const roleBadgeVariant = (role: string) => {
 export function UserManagement({ users, invites, onRefresh }: Props) {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
-  const [inviteRole, setInviteRole] = useState<"manager" | "worker">("worker")
+  const [inviteRole] = useState<"worker">("worker")
   const [inviting, setInviting] = useState(false)
 
   const pendingInvites = invites.filter(
     (i) => !i.acceptedAt && new Date(i.expiresAt) > new Date()
   )
-
-  async function handleRoleChange(userId: string, newRole: string) {
-    try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        toast.error(data.error ?? "Failed to update role")
-        return
-      }
-      toast.success("Role updated")
-      await onRefresh()
-    } catch {
-      toast.error("Network error")
-    }
-  }
 
   async function handleDeactivate(userId: string, userName: string) {
     try {
@@ -156,7 +128,6 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
       }
       toast.success(`Invitation sent to ${inviteEmail}`)
       setInviteEmail("")
-      setInviteRole("worker")
       setInviteOpen(false)
       await onRefresh()
     } catch {
@@ -201,21 +172,8 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="invite-role">Role</Label>
-                  <Select
-                    value={inviteRole}
-                    onValueChange={(v) =>
-                      setInviteRole(v as "manager" | "worker")
-                    }
-                  >
-                    <SelectTrigger id="invite-role">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="worker">Worker</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Role</Label>
+                  <p className="text-sm text-muted-foreground">Worker</p>
                 </div>
                 <DialogFooter>
                   <Button type="submit" disabled={inviting} className="w-full sm:w-auto">
@@ -247,7 +205,7 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                     {user.role}
                   </Badge>
                 </div>
-                {user.role !== "superuser" && (
+                {user.role === "worker" && (
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       render={<Button variant="ghost" size="sm" />}
@@ -255,17 +213,6 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                       ⋯
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() =>
-                          handleRoleChange(
-                            user.id,
-                            user.role === "manager" ? "worker" : "manager"
-                          )
-                        }
-                      >
-                        Make{" "}
-                        {user.role === "manager" ? "Worker" : "Manager"}
-                      </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                         onClick={() => handleDeactivate(user.id, user.name)}
@@ -297,44 +244,9 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      {user.role === "superuser" ? (
-                        <Badge variant="default">superuser</Badge>
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-auto gap-1 px-2 py-0.5"
-                              />
-                            }
-                          >
-                            <Badge variant={roleBadgeVariant(user.role)}>
-                              {user.role}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              ▾
-                            </span>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleRoleChange(user.id, "manager")
-                              }
-                            >
-                              Manager
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleRoleChange(user.id, "worker")
-                              }
-                            >
-                              Worker
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
+                      <Badge variant={roleBadgeVariant(user.role)}>
+                        {user.role}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -345,7 +257,8 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {user.role !== "superuser" && (
+                      {user.role === "worker" && (
+                        <div className="flex items-center justify-end gap-1">
                         <AlertDialog>
                           <AlertDialogTrigger
                             render={
@@ -375,6 +288,7 @@ export function UserManagement({ users, invites, onRefresh }: Props) {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

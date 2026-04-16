@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireSuperuser } from "@/lib/admin"
+import { requireManager } from "@/lib/tenant"
 import { db } from "@/lib/db"
 import { farms } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
+import { farmPatchSchema } from "@/lib/validation"
 
 export async function GET() {
   try {
-    const { appUser } = await requireSuperuser()
+    const tenant = await requireManager()
 
     const [farm] = await db
       .select()
       .from(farms)
-      .where(eq(farms.id, appUser.farmId!))
+      .where(eq(farms.id, tenant.farmId))
       .limit(1)
 
     if (!farm) {
@@ -29,20 +30,25 @@ export async function GET() {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { appUser } = await requireSuperuser()
-    const body = await req.json()
+    const tenant = await requireManager()
 
-    const updates: Record<string, unknown> = {}
-    if (body.name) updates.name = body.name
-    if (body.location !== undefined) updates.location = body.location
-    if (body.sizeHa !== undefined) updates.sizeHa = body.sizeHa
-    if (body.farmingType) updates.farmingType = body.farmingType
+    const parsed = farmPatchSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
+        { status: 400 }
+      )
+    }
+
+    const updates = Object.fromEntries(
+      Object.entries(parsed.data).filter(([, v]) => v !== undefined)
+    )
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "Nothing to update" }, { status: 400 })
     }
 
-    await db.update(farms).set(updates).where(eq(farms.id, appUser.farmId!))
+    await db.update(farms).set(updates).where(eq(farms.id, tenant.farmId))
 
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
@@ -55,13 +61,13 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { appUser } = await requireSuperuser()
+    const tenant = await requireManager()
     const { confirmName } = await req.json()
 
     const [farm] = await db
       .select()
       .from(farms)
-      .where(eq(farms.id, appUser.farmId!))
+      .where(eq(farms.id, tenant.farmId))
       .limit(1)
 
     if (!farm) {

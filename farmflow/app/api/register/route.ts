@@ -3,8 +3,13 @@ import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { farms, users } from "@/lib/db/schema"
 import { headers } from "next/headers"
+import { rateLimit } from "@/lib/rate-limit"
+import { registerSchema } from "@/lib/validation"
 
 export async function POST(req: NextRequest) {
+  const blocked = rateLimit(req, "strict")
+  if (blocked) return blocked
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -13,14 +18,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 })
   }
 
-  const { farmName, farmingType, location } = await req.json()
-
-  if (!farmName || !farmingType) {
+  const parsed = registerSchema.safeParse(await req.json())
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Farm name and farming type are required." },
+      { error: parsed.error.issues[0]?.message ?? "Invalid input" },
       { status: 400 }
     )
   }
+
+  const { farmName, farmingType, location } = parsed.data
 
   const farmId = crypto.randomUUID()
 
@@ -36,7 +42,7 @@ export async function POST(req: NextRequest) {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name,
-    role: "superuser",
+    role: "manager",
     farmId,
   })
 
