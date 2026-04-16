@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server"
-import { requireSuperuser } from "@/lib/admin"
+import { requireManager } from "@/lib/tenant"
 import { db } from "@/lib/db"
 import { users, invites } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 
 export async function GET() {
   try {
-    const { appUser } = await requireSuperuser()
+    const tenant = await requireManager()
 
     const farmUsers = await db
       .select()
       .from(users)
-      .where(eq(users.farmId, appUser.farmId!))
+      .where(eq(users.farmId, tenant.farmId))
 
     const pendingInvites = await db
       .select()
       .from(invites)
-      .where(eq(invites.farmId, appUser.farmId!))
+      .where(eq(invites.farmId, tenant.farmId))
 
     return NextResponse.json({ users: farmUsers, invites: pendingInvites })
   } catch (e: unknown) {

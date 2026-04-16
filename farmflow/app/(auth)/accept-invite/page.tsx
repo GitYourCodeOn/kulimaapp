@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -59,8 +59,8 @@ function AcceptInviteForm() {
         return
       }
 
-      toast.success("Account created — redirecting to login…")
-      setTimeout(() => router.push("/login"), 1500)
+      toast.success("Account created — let's get started!")
+      setTimeout(() => router.push("/onboarding"), 1500)
     } catch {
       toast.error("Network error — please try again")
     } finally {

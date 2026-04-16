@@ -18,7 +18,6 @@ export const farmingTypeEnum = pgEnum("farming_type", [
 ])
 
 export const userRoleEnum = pgEnum("user_role", [
-  "superuser",
   "manager",
   "worker",
 ])
@@ -127,7 +126,9 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   role: userRoleEnum("role").notNull().default("worker"),
-  farmId: text("farm_id").references(() => farms.id, { onDelete: "set null" }),
+  farmId: text("farm_id")
+    .notNull()
+    .references(() => farms.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 })
 
@@ -262,11 +263,18 @@ export const invites = pgTable("invites", {
   acceptedAt: timestamp("accepted_at"),
 })
 
+export const platformAdmins = pgTable("platform_admins", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => authUser.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
 export const impersonationLogs = pgTable("impersonation_logs", {
   id: text("id").primaryKey(),
   adminId: text("admin_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => authUser.id),
   impersonatedUserId: text("impersonated_user_id")
     .notNull()
     .references(() => users.id),

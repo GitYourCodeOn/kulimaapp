@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from "next/server"
-import { requireSuperuser } from "@/lib/admin"
+import { requireManager } from "@/lib/tenant"
 import { db } from "@/lib/db"
 import { invites } from "@/lib/db/schema"
 import { sendEmail } from "@/lib/email"
 import { randomBytes } from "crypto"
+import { rateLimit } from "@/lib/rate-limit"
+import { managerInviteSchema } from "@/lib/validation"
 
 export async function POST(req: NextRequest) {
   try {
-    const { appUser } = await requireSuperuser()
-    const { email, role } = await req.json()
+    const blocked = rateLimit(req, "strict")
+    if (blocked) return blocked
 
-    if (!email || !role || !["manager", "worker"].includes(role)) {
+    const tenant = await requireManager()
+
+    const parsed = managerInviteSchema.safeParse(await req.json())
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Valid email and role (manager/worker) required" },
+        { error: parsed.error.issues[0]?.message ?? "Invalid input" },
         { status: 400 }
       )
     }
+
+    const { email, role } = parsed.data
 
     const token = randomBytes(32).toString("hex")
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000)
 
     await db.insert(invites).values({
       id: crypto.randomUUID(),
-      farmId: appUser.farmId!,
+      farmId: tenant.farmId,
       email,
       role,
       token,

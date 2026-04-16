@@ -15,7 +15,7 @@ interface AppUser {
   id: string
   email: string
   name: string
-  role: "superuser" | "manager" | "worker"
+  role: "manager" | "worker"
   farmId: string | null
   createdAt: string
 }
@@ -83,6 +83,13 @@ export default function AdminPage() {
     if (!isPending && session) fetchData()
   }, [isPending, session, fetchData])
 
+  useEffect(() => {
+    if (isPending) return
+    if (!session) {
+      router.replace("/login")
+    }
+  }, [isPending, session, router])
+
   if (isPending || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f7f9f7]">
@@ -92,8 +99,11 @@ export default function AdminPage() {
   }
 
   if (!session) {
-    router.push("/login")
-    return null
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f9f7]">
+        <p className="text-muted-foreground">Redirecting…</p>
+      </div>
+    )
   }
 
   return (

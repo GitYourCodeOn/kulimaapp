@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
@@ -80,12 +81,21 @@ function LoginForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs font-medium text-[#166534] underline-offset-4 hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <Input
                 id="password"
                 name="password"
                 type="password"
                 placeholder="Your password"
+                autoComplete="current-password"
                 required
               />
             </div>
